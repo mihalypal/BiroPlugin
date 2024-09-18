@@ -2,6 +2,7 @@
 <idea-plugin>
     <id>com.github.mihalypal.biroplugin</id>
     <name>BiroPlugin</name>
+    <version>1.0</version>
     <vendor>mihalypal</vendor>
 
     <depends>com.intellij.modules.platform</depends>
@@ -9,7 +10,7 @@
     <resource-bundle>messages.MyBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.mihalypal.biroplugin.toolWindow.MyToolWindowFactory" id="MyToolWindow"/>
+        <toolWindow factoryClass="com.github.mihalypal.biroplugin.toolWindow.MyToolWindowFactory" id="Bíró" anchor="right"/>
     </extensions>
 
     <applicationListeners>
