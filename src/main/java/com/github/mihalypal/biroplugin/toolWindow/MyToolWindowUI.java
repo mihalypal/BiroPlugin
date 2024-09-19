@@ -22,10 +22,10 @@ public class MyToolWindowUI {
     public MyToolWindowUI() {
 
         biroUIForm = new BiroUIForm();
-        mainPanel = biroUIForm.getMainPanel();
+        //mainPanel = biroUIForm.getMainPanel();
 
         //mainPanel = new JBPanel<>();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+        //mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
 
         /*label = new JBLabel("Enter something:");
         textField = new JTextField();
