@@ -15,6 +15,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class UserServices {
+    private static String accessToken;
+    private static String refreshToken;
 
     /*private static String authToken;
 
@@ -92,5 +94,93 @@ public class UserServices {
             return false;
         }
     }*/
+    public String getAccessToken() {
+        return accessToken;
+    }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+
+    public void setAccessToken(String accessToken) {
+        UserServices.accessToken = accessToken;
+    }
+
+    public void setRefreshToken(String refreshToken) {
+        UserServices.refreshToken = refreshToken;
+    }
+
+    // HTTP request to get the access token
+    public void refreshToken(String refreshToken) {
+        try {
+            // Biro login API endpoint
+            URL url = new URL("https://biro3.inf.u-szeged.hu/api/v1/auth/refresh-token");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json; utf-8");
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestProperty("Cookie", "refresh-token=" + refreshToken);
+            conn.setDoOutput(true);
+
+            // Send the refresh token in the request body
+            String jsonInputString = String.format("{\"refreshToken\": \"%s\"}", refreshToken);
+            try (OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);
+            }
+
+            // Get the response code
+            int responseCode = conn.getResponseCode();
+            // If the response code is 200 OK, then the login was successful
+            // and we can extract the accessToken from the response
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                    StringBuilder response = new StringBuilder();
+                    String inputLine;
+                    while ((inputLine = in.readLine()) != null) {
+                        response.append(inputLine);
+                    }
+
+                    // Parse the JSON response to extract the accessToken
+                    JsonObject jsonResponse = JsonParser.parseString(response.toString()).getAsJsonObject();
+                    String accessToken = jsonResponse.get("accessToken").getAsString();
+                    setAccessToken(accessToken); // Store the accessToken
+                }
+            } else {
+                System.out.println("POST request failed. Response Code: " + responseCode);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public String callGetApi(String apiUrl) {
+        StringBuilder response = new StringBuilder();
+        try {
+            refreshToken(refreshToken);
+            URL url = new URL(apiUrl);
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+            if (accessToken != null && !accessToken.isEmpty()) {
+                conn.setRequestProperty("Authorization", "Bearer " + accessToken); // JWT token hozzáadása
+            }
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                try (BufferedReader in = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                    String inputLine;
+                    while ((inputLine = in.readLine()) != null) {
+                        response.append(inputLine);
+                    }
+                }
+            } else {
+                System.out.println("GET request failed. Response Code: " + responseCode);
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return response.toString();
+    }
 
 }

@@ -29,6 +29,7 @@ public class BiroUILoginForm {
     private JButton loginButton;
     private JCheckBox rememberMeCheckBox;
     private String authToken;
+    private String refreshToken;
     private BiroUIMainForm biroUIMainForm;
     private static final String CREDENTIALS_FILE_PATH = PathManager.getPluginsPath() + File.separator + "BiroPlugin" + File.separator + "credentials.txt";
 
@@ -101,7 +102,7 @@ public class BiroUILoginForm {
     }
 
     private void showMainForm() {
-        biroUIMainForm = new BiroUIMainForm();
+        biroUIMainForm = new BiroUIMainForm(authToken, refreshToken);
         JPanel parentPanel = (JPanel) mainPanel.getParent();
         parentPanel.removeAll();
         parentPanel.add(biroUIMainForm.getMainPanel());
@@ -139,18 +140,17 @@ public class BiroUILoginForm {
                     Matcher matcher = pattern.matcher(cookie);
                     if (matcher.find()) {
                         String token = matcher.group(1);
-                        authToken = token;
-                        //System.out.println("Extracted token: " + token);
+                        refreshToken = token;
+                        System.out.println("Refresh token: " + refreshToken);
                     }
                 }
             } else {
 //                System.out.println("No Set-Cookie header found");
             }
 
-            System.out.println("Response message: " + conn.getResponseMessage());
-            System.out.println("Response content type: " + conn.getContentType());
-            System.out.println("Response header fields: " + conn.getHeaderFields());
-            System.out.println("Response token: " + authToken);
+            //System.out.println("Response message: " + conn.getResponseMessage());
+            //System.out.println("Response content type: " + conn.getContentType());
+            //System.out.println("Response header fields: " + conn.getHeaderFields());
 
             // Get the response code
             int responseCode = conn.getResponseCode();

@@ -1,74 +1,78 @@
 package com.github.mihalypal.biroplugin.UIForms;
 
-import com.intellij.openapi.application.PathManager;
-import com.intellij.ui.components.JBLabel;
-import com.intellij.ui.components.JBPanel;
+import com.github.mihalypal.biroplugin.Services.UserServices;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
 import javax.swing.*;
-import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.io.File;
 
 public class BiroUIMainForm {
     private JPanel mainPanel;
-    private JBLabel label;
-    private JTextField textField;
-    private JButton button;
-    private JButton button2;
-    private JButton logoutButton;
+    private JButton tokenRefreshTest;
+    private DefaultListModel<String> listModel;
+    private JList<String> list1;
+    private String accessToken;
+    private String refreshToken;
+    private UserServices userServices;
 
-    public BiroUIMainForm() {
-        mainPanel = new JBPanel<>();
-        mainPanel.setLayout(new BoxLayout(mainPanel, BoxLayout.Y_AXIS));
+    public BiroUIMainForm(String accessToken, String refreshToken) {
+        this.accessToken = accessToken;
+        this.refreshToken = refreshToken;
+        userServices = new UserServices();
+        userServices.setAccessToken(accessToken);
+        userServices.setRefreshToken(refreshToken);
+        listModel = new DefaultListModel<>();
 
-        label = new JBLabel("Enter something:");
-        textField = new JTextField();
-        Dimension size = new Dimension(200, 30);
-        textField.setPreferredSize(size);
-        textField.setMaximumSize(size);
-        textField.setMinimumSize(size);
-        button = new JButton("Submit");
-        button2 = new JButton("Árvíztűrő tükörfúrógép");
-        logoutButton = new JButton("Logout");
+        //System.out.println("Access token: " + accessToken);
+        //System.out.println("Refresh token: " + refreshToken);
 
-        mainPanel.add(label);
-        mainPanel.add(textField);
-        mainPanel.add(button);
-        mainPanel.add(button2);
-        mainPanel.add(logoutButton);
-
-        button.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String inputText = textField.getText();
-                // Handle button click event
-                System.out.println("Button clicked with input: " + inputText);
-            }
+        tokenRefreshTest.addActionListener(e -> {
+            //System.out.println("Access token: " + accessToken);
+            //System.out.println("Refresh token: " + refreshToken);
+            System.out.println("Access token: " + userServices.getAccessToken());
+            System.out.println("Refresh token: " + userServices.getRefreshToken());
+            userServices.refreshToken(refreshToken);
+            System.out.println("Access token: " + userServices.getAccessToken());
+            System.out.println("Refresh token: " + userServices.getRefreshToken());
         });
 
-        button2.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                // Handle button click event
-                System.out.println("Árvíztűrő tükörfúrógép pressed");
+        String subjects = userServices.callGetApi("https://biro3.inf.u-szeged.hu/api/v1/students/subject-instances");
+        String[] subjectInstances = subjects.split("\\},\\{");
+        // Get the subjects in String Array with JSON format
+        for (int i = 0; i < subjectInstances.length; i++) {
+            if (subjectInstances[i].startsWith("[{")) {
+                subjectInstances[i] = subjectInstances[i].substring(1) + "}";
+            } else if (subjectInstances[i].endsWith("}]")) {
+                subjectInstances[i] = "{" + subjectInstances[i].substring(0, subjectInstances[i].length() - 1);
+            } else {
+                subjectInstances[i] = "{" + subjectInstances[i] + "}";
             }
-        });
+        }
+        /*subjects = subjects.replace("[{", "{");
+        subjects = subjects.replace("}]", "}");
+        JsonObject jsonResponse = JsonParser.parseString(subjects).getAsJsonObject();
+        System.out.println("Subjects: " + jsonResponse.get("subjectName"));*/
+        System.out.println("Subjects: " + subjectInstances.length);
+        System.out.println("Subjects: " + subjectInstances[0]);
+        for (String subjectInstance : subjectInstances) {
+            JsonObject jsonResponse = JsonParser.parseString(subjectInstance).getAsJsonObject();
+            System.out.println("Subjects: " + jsonResponse.get("subjectName"));
+            listModel.addElement(jsonResponse.get("subjectName").getAsString());
+        }
+        list1.setModel(listModel);
 
-        logoutButton.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                logout();
-            }
-        });
-    }
+        list1.addListSelectionListener(e -> {
+            System.out.println("Selected: " + list1.getSelectedValue());
 
-    public void logout() {
-        BiroUILoginForm loginForm = new BiroUILoginForm();
-        JPanel parentPanel = (JPanel) mainPanel.getParent();
-        parentPanel.removeAll();
-        parentPanel.add(loginForm.getMainPanel());
-        parentPanel.revalidate();
-        parentPanel.repaint();
+            // TODO:
+            // Mivel ki lehet választani a tárgyat és van rá ActionListener,
+            // ezért a kiválasztott tárgyhoz tartozó adatokat lekérhetjük
+            // és megjeleníthetjük a felületen dinamikusan.
+            // Alul egy "számonkérések" listát lehetne megjeleníteni
+            // a kiválasztott tárgyhoz tartozó számonkérésekkel.
+            // Ehhez a tárgyak assignmnetjeit előre is le lehetne kérni, hogy ne kelljen minden kattintásra lekérni.
+            // Vagy elsőre lekéri az összes tárgyat és azokhoz tartozó számonkéréseket.
+        });
     }
 
     public JPanel getMainPanel() {
