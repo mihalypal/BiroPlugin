@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import javax.swing.*;
+import java.util.Arrays;
 
 public class BiroUIMainForm {
     private JPanel mainPanel;
@@ -57,12 +58,28 @@ public class BiroUIMainForm {
         for (String subjectInstance : subjectInstances) {
             JsonObject jsonResponse = JsonParser.parseString(subjectInstance).getAsJsonObject();
             System.out.println("Subjects: " + jsonResponse.get("subjectName"));
-            listModel.addElement(jsonResponse.get("subjectName").getAsString());
+            String subjectData = jsonResponse.get("subjectName").getAsString() + ";" + jsonResponse.get("subjectInstanceId").getAsString();
+            //listModel.addElement(jsonResponse.get("subjectName").getAsString());
+            listModel.addElement(subjectData);
         }
         list1.setModel(listModel);
 
         list1.addListSelectionListener(e -> {
-            System.out.println("Selected: " + list1.getSelectedValue());
+            //System.out.println("Selected: " + list1.getSelectedValue());
+            //System.out.println("Selected: " + Arrays.toString(list1.getSelectedValue().split(";")));
+
+            // Get the selected subject name and instance ID
+            String subjectName = list1.getSelectedValue().split(";")[0];
+            String subjectInstanceId = list1.getSelectedValue().split(";")[1];
+
+            // Call the API to get the assignments for the selected subject
+            System.out.println("Selected: " + subjectName + " - " + subjectInstanceId);
+            String endpoint = "https://biro3.inf.u-szeged.hu/api/v1/students/subject-instances/" + subjectInstanceId + "/assignments";
+            String assignments = apiCall(endpoint);
+            System.out.println("Assignments for " + subjectName + ": " + assignments);
+
+            // Next is to parse the JSON response and display the assignments on UI with list elements
+            // The assignments can be selected and an ActionListener can be opened to display the details and assign the exercises
 
             // TODO:
             // Mivel ki lehet választani a tárgyat és van rá ActionListener,
@@ -73,6 +90,11 @@ public class BiroUIMainForm {
             // Ehhez a tárgyak assignmnetjeit előre is le lehetne kérni, hogy ne kelljen minden kattintásra lekérni.
             // Vagy elsőre lekéri az összes tárgyat és azokhoz tartozó számonkéréseket.
         });
+    }
+
+    // api: https://biro3.inf.u-szeged.hu/api/v1/students/subject-instances/4/assignments
+    private String apiCall(String url) {
+        return userServices.callGetApi(url);
     }
 
     public JPanel getMainPanel() {
