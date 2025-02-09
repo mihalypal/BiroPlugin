@@ -16,6 +16,7 @@ public class BiroUIMainForm {
     private DefaultListModel<String> subjectAssignmentList;
     private JList<String> list1;
     private JList<String> list2;
+    private JButton openAssignmentButton;
     private String accessToken;
     private String refreshToken;
     private UserServices userServices;
@@ -29,6 +30,7 @@ public class BiroUIMainForm {
         listModel = new DefaultListModel<>();
         subjectAssignmentList = new DefaultListModel<>();
         ArrayList<String> subjectNamesWithIds = new ArrayList<>();
+        ArrayList<String> allAssignmentsOfSelectedSubject = new ArrayList<>();
 
         //System.out.println("Access token: " + accessToken);
         //System.out.println("Refresh token: " + refreshToken);
@@ -83,10 +85,10 @@ public class BiroUIMainForm {
             // Get the selected subject name and instance ID
             String subjectName = list1.getSelectedValue();
             String subjectInstanceId = subjectNamesWithIds.stream()
-                .filter(s -> s.contains(subjectName))
-                .findFirst()
-                .orElse("")
-                .split(";")[1];
+                    .filter(s -> s.contains(subjectName))
+                    .findFirst()
+                    .orElse("")
+                    .split(";")[1];
 
             // Call the API to get the assignments for the selected subject
             System.out.println("Selected: " + subjectName + " - " + subjectInstanceId);
@@ -121,13 +123,14 @@ public class BiroUIMainForm {
                 String assignmentName = jsonResponse.get("assignmentName").getAsString();
                 String endTime = jsonResponse.get("endTime").getAsString().replace("-", ".").replace("T", " ");
 
-                String assignmentData =assignmentName + ";" + endTime;
+                String assignmentData = assignmentName + ";" + endTime;
 
                 // get local time and add just those assignments which are not expired and not started yet
                 if (LocalDateTime.now().isBefore(LocalDateTime.parse(jsonResponse.get("endTime").getAsString()))        // még nem járt le
-                 && LocalDateTime.now().isAfter(LocalDateTime.parse(jsonResponse.get("startTime").getAsString()))) {    // már elkezdődött
+                        && LocalDateTime.now().isAfter(LocalDateTime.parse(jsonResponse.get("startTime").getAsString()))) {    // már elkezdődött
                     subjectAssignmentList.addElement(assignmentData);
                 }
+                allAssignmentsOfSelectedSubject.add(assignmentInstance);
 
                 //subjectAssignmentList.addElement(assignmentData);
             }
@@ -141,6 +144,21 @@ public class BiroUIMainForm {
             // a kiválasztott tárgyhoz tartozó számonkérésekkel.
             // Ehhez a tárgyak assignmnetjeit előre is le lehetne kérni, hogy ne kelljen minden kattintásra lekérni.
             // Vagy elsőre lekéri az összes tárgyat és azokhoz tartozó számonkéréseket.
+        });
+
+        list2.addListSelectionListener(e -> {
+            System.out.println("Selected: " + list2.getSelectedValue());
+        });
+
+        openAssignmentButton.addActionListener(e -> {
+            //System.out.println("Selected: " + list2.getSelectedValue()); // test output
+            String selectedAssignment = allAssignmentsOfSelectedSubject.stream()
+                .filter(s -> s.contains(list2.getSelectedValue().split(";")[0]))
+                .findFirst()
+                .orElse("");
+            JsonObject selectedAssignmentJSON = JsonParser.parseString(selectedAssignment).getAsJsonObject();
+            System.out.println(selectedAssignmentJSON.get("assignmentName").getAsString() + " nevű feladat kezdése...");
+            //System.out.println("Selected assignment: " + selectedAssignment); test output
         });
     }
 
