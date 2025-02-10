@@ -50,6 +50,8 @@ dependencies {
     }
 
     implementation("com.google.code.gson:gson:2.8.8")
+    implementation("org.commonmark:commonmark:0.18.2")
+    implementation("org.commonmark:commonmark-ext-gfm-tables:0.18.2")
 }
 
 // Configure IntelliJ Platform Gradle Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html

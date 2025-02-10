@@ -159,7 +159,17 @@ public class BiroUIMainForm {
             JsonObject selectedAssignmentJSON = JsonParser.parseString(selectedAssignment).getAsJsonObject();
             System.out.println(selectedAssignmentJSON.get("assignmentName").getAsString() + " nevű feladat kezdése...");
             //System.out.println("Selected assignment: " + selectedAssignment); test output
+            showAssignmentView(accessToken, refreshToken, selectedAssignment);
         });
+    }
+
+    private void showAssignmentView(String accessToken, String refreshToken, String assignment) {
+        AssignmentView assignmentView = new AssignmentView(accessToken, refreshToken, assignment);
+        JPanel parentPanel = (JPanel) mainPanel.getParent();
+        parentPanel.removeAll();
+        parentPanel.add(assignmentView.getMainPanel());
+        parentPanel.revalidate();
+        parentPanel.repaint();
     }
 
     // api: https://biro3.inf.u-szeged.hu/api/v1/students/subject-instances/4/assignments

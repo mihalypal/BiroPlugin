@@ -94,7 +94,7 @@ public class UserServices {
             return false;
         }
     }*/
-    public String getAccessToken() {
+    public static String getAccessToken() {
         return accessToken;
     }
 
@@ -102,7 +102,7 @@ public class UserServices {
         return refreshToken;
     }
 
-    public void setAccessToken(String accessToken) {
+    public static void setAccessToken(String accessToken) {
         UserServices.accessToken = accessToken;
     }
 
@@ -111,7 +111,7 @@ public class UserServices {
     }
 
     // HTTP request to get the access token
-    public void refreshToken(String refreshToken) {
+    public static void refreshToken(String refreshToken) {
         try {
             // Biro login API endpoint
             URL url = new URL("https://biro3.inf.u-szeged.hu/api/v1/auth/refresh-token");
