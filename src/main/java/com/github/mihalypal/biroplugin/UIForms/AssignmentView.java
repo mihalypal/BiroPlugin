@@ -2,6 +2,7 @@ package com.github.mihalypal.biroplugin.UIForms;
 
 import com.github.mihalypal.biroplugin.Services.FileDownloader;
 import com.github.mihalypal.biroplugin.appearanceChanges.CustomButtonUI;
+import com.github.mihalypal.biroplugin.appearanceChanges.CustomProgressBarUI;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
@@ -78,13 +79,16 @@ public class AssignmentView {
         topPanel.add(assignmentNameLabel, BorderLayout.WEST);
 
         scoreOfOpenedExercise = new JLabel("", SwingConstants.CENTER);
-        progressBar = new JProgressBar(0, 100);
 
+        // Custom ProgressBar design
+        UIManager.put("ProgressBar.selectionForeground", Color.WHITE); // Szöveg színe
+        UIManager.put("ProgressBar.selectionBackground", Color.BLACK); // Szöveg háttérszíne
+        progressBar = new JProgressBar(0, 100);
         progressBar.setStringPainted(true);
-        UIManager.put("ProgressBar.foreground", new Color(0, 255, 0)); // Kék progress sáv
-        UIManager.put("ProgressBar.background", new Color(255, 0, 0)); // Világos szürke háttér
-        UIManager.put("ProgressBar.selectionForeground", Color.BLACK); // Szöveg színe
-        UIManager.put("ProgressBar.selectionBackground", Color.WHITE); // Szöveg háttérszíne
+        //progressBar.setUI(new CustomProgressBarUI(new Color(63, 81, 181), new Color(63, 81, 181, 12)));
+        //progressBar.setUI(new CustomProgressBarUI(new Color(147, 147, 147), new Color(78, 78, 78)));
+        progressBar.setUI(new CustomProgressBarUI(new Color(50, 130, 200, 170), new Color(78, 78, 78)));
+
 
 
 // Színek beállítása
@@ -281,7 +285,8 @@ public class AssignmentView {
                 ".story { border: 2px solid orange; padding: 5px; margin-bottom: 10px; background-color: #888; color: purple }" +
                 "img { margin: auto; }" +
                 //change to italic
-                ".hint { margin-top: 10px; font-size: 10px; font-style: italic; }" +
+                ".hint { margin-top: 15px; font-size: 10px; font-style: italic; display: inline; }" +
+                ".hint-span { font-size: 11px; font-style: normal; }" +
                 ".example { border: 1px solid #2a881b; color: #2a881b; margin: 10px 0; padding: 10px }" +
                 "code { background-color: #2c2c2c; font-style: italic }" +
                 "</style>";
@@ -295,6 +300,7 @@ public class AssignmentView {
             fullHtml = fullHtml.substring(0, exampleEndIndex) + "</i></div>" + fullHtml.substring(exampleEndIndex);
             exampleIndex = fullHtml.indexOf("example\">", exampleEndIndex);
         }
+        fullHtml = fullHtml.replace("<div class=\"hint\">", "<div class=\"hint\"><span class=\"hint-span\">Hint: </span>");
 
         System.out.println(fullHtml);
         return fullHtml;
