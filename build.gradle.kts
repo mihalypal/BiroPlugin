@@ -49,7 +49,7 @@ dependencies {
         testFramework(TestFrameworkType.Platform)
     }
 
-    implementation("com.google.code.gson:gson:2.8.8")
+    implementation("com.google.code.gson:gson:2.8.9")
     implementation("org.commonmark:commonmark:0.18.2")
     implementation("org.commonmark:commonmark-ext-gfm-tables:0.18.2")
 }

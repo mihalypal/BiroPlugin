@@ -13,7 +13,7 @@ public class MyToolWindowFactory implements ToolWindowFactory {
     private static final Logger LOG = Logger.getInstance(MyToolWindowFactory.class);
 
     public MyToolWindowFactory() {
-        LOG.warn("Don't forget to remove all non-needed sample code files with their corresponding registration entries in `plugin.xml`.");
+        //LOG.warn("Don't forget to remove all non-needed sample code files with their corresponding registration entries in `plugin.xml`.");
     }
 
     @Override

@@ -140,7 +140,9 @@ public class FileDownloader {
             // Ha nincs src mappa, akkor valószínűleg nem egy Java projekt, szóval biro_files mappába mentjük
             srcDir = new File(projectBasePath, "biro_files");
 
-            boolean created = srcDir.mkdirs(); // Ha nem létezik, létrehozzuk
+            boolean created = true;
+            if (!srcDir.exists())
+                created = srcDir.mkdirs(); // Ha nem létezik, létrehozzuk
             if (!created) {
                 System.out.println("Failed to create src directory.");
                 return;
@@ -213,7 +215,9 @@ public class FileDownloader {
     // Ha a fájl már létezik, generál egy új nevet sorszámozással
     private static File getUniqueFileName(File directory, String originalFileName) {
         File file = new File(directory, originalFileName);
+        System.out.println("File: " + file.getAbsolutePath());
         if (!file.exists()) {
+            System.out.println("File: " + directory + " : " + originalFileName);
             return file; // Ha nincs ilyen fájl, akkor ezt használjuk
         }
 

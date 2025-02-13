@@ -1,7 +1,7 @@
 <!-- Plugin Configuration File. Read more: https://plugins.jetbrains.com/docs/intellij/plugin-configuration-file.html -->
 <idea-plugin>
     <id>com.github.mihalypal.biroplugin</id>
-    <name>Biro</name>
+    <name>Bíró 3 Extension</name>
     <version>1.0</version>
     <vendor>mihalypal</vendor>
 
@@ -10,7 +10,7 @@
     <resource-bundle>messages.MyBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.mihalypal.biroplugin.toolWindow.MyToolWindowFactory" id="Bíró" anchor="right"/>
+        <toolWindow factoryClass="com.github.mihalypal.biroplugin.toolWindow.MyToolWindowFactory" id="Bíró" anchor="right" icon="AllIcons.Ide.Gift"/>
     </extensions>
 
     <applicationListeners>

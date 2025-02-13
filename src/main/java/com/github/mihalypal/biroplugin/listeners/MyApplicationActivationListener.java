@@ -10,6 +10,6 @@ public class MyApplicationActivationListener implements ApplicationActivationLis
 
     @Override
     public void applicationActivated(IdeFrame ideFrame) {
-        logger.warn("Don't forget to remove all non-needed sample code files with their corresponding registration entries in `plugin.xml`.");
+        //logger.warn("Don't forget to remove all non-needed sample code files with their corresponding registration entries in `plugin.xml`.");
     }
 }
