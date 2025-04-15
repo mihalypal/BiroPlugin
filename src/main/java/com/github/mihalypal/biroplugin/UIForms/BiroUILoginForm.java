@@ -4,6 +4,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import javax.swing.*;
+import java.awt.event.ActionListener;
 import java.io.*;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -47,7 +48,9 @@ public class BiroUILoginForm {
             rememberMeCheckBox.setSelected(true);
         }
 
-        loginButton.addActionListener(e -> {
+        SwingUtilities.invokeLater(() -> usernameTextField.requestFocusInWindow());
+
+        ActionListener loginAction = e -> {
             String username = usernameTextField.getText();
             String password = new String(passwordField.getPassword());
             //System.out.println("Username: " + username + " Password: " + password);
@@ -97,7 +100,11 @@ public class BiroUILoginForm {
             }
 
 
-        });
+        };
+
+        loginButton.addActionListener(loginAction);
+        usernameTextField.addActionListener(loginAction);
+        passwordField.addActionListener(loginAction);
 
     }
 
