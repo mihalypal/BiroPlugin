@@ -118,6 +118,13 @@ import java.util.Base64;
 
 public class FileDownloader {
 
+    /**
+     * Letölt egy fájlt az API-ról és menti a projekt `src` mappájába vagy ha az nincs, akkor a `biro_files` mappába.
+     *
+     * @param fileURL     A fájl URL-je.
+     * @param accessToken Az API hozzáférési token.
+     * @throws IOException Ha a letöltés vagy mentés közben hiba lép fel.
+     */
     public static void downloadFile(String fileURL, String accessToken) throws IOException {
         // Lekérjük az aktuális projektet
         Project project = ProjectManager.getInstance().getOpenProjects()[0]; // Az első megnyitott projektet vesszük

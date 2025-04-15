@@ -10,6 +10,7 @@ import com.google.gson.JsonParser;
 //import com.vladsch.flexmark.parser.Parser;
 //import com.vladsch.flexmark.html.HtmlRenderer;
 import com.github.mihalypal.biroplugin.Services.UserServices;
+import com.github.mihalypal.biroplugin.Services.PNGConverter;
 
 import org.commonmark.Extension;
 import org.commonmark.node.*;
@@ -19,6 +20,7 @@ import org.commonmark.ext.gfm.tables.TablesExtension;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.image.BufferedImage;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -58,6 +60,8 @@ public class AssignmentView {
         String currentAssignment = userServices.callGetApi("https://biro3.inf.u-szeged.hu/api/v1/students/assignments/" + assignmentStudentId);
         System.out.println("Current assignment: " + currentAssignment);
 
+
+        // TODO: check-avaibility request-el megnézni, hogy elérhető-e a feladat, mielőtt lekérem, mert IDE Error Occured lesz és meghal a plugin
         JsonObject exercisesOfTheAssignment = JsonParser.parseString(currentAssignment).getAsJsonObject();
         JsonArray exerciseStatuses = exercisesOfTheAssignment.get("exerciseStatuses").getAsJsonArray();
         System.out.println("Exercises of the assignment: " + exerciseStatuses);
@@ -181,11 +185,21 @@ public class AssignmentView {
 //        assignmentDescriptionScrollPane.setFont(new Font("Arial", Font.PLAIN, 12));
 //        System.out.println("Screen height: " + Toolkit.getDefaultToolkit().getScreenSize().height);
         //what if i have multiple monitors with diffrerent resolutions?
+
+        //TODO: a bottomPanelt még a gombok létrehozása előtt kell létrehozni, és az őket létrehozó for ciklusban kell valahogy hozzáadni a bottomPanelhez a letöltési gombot, mert a gombok létrehozásánál tudom lekérni az adott feladat adatait
         JPanel bottomPanel = new JPanel();
         bottomPanel.add(new JLabel("Ide fog kerülni a fel- és letöltési lehetőség"));
-        JButton testForDownload = new JButton("Letöltés");
+        JButton testForDownload = new JButton("Biztosított fájl(ok) letöltése");
         testForDownload.addActionListener(e -> {
             System.out.println("Letöltés gomb megnyomva");
+            String assignedExerciseId = "";
+            JsonArray starterFiles = exercisesOfTheAssignment.get("starterFiles").getAsJsonArray();
+            System.out.println("Starter files: " + starterFiles);
+            try {
+                assignedExerciseId = exercises.get(0).get("assignedExerciseId").getAsString();
+            } catch (Exception exception) {
+                System.out.println("No assigned exercise id for this exercise.");
+            }
             String downloadFileUrl = "https://biro3.inf.u-szeged.hu/api/v1/students/exercises/206370/starterfiles/555";
             try {
                 UserServices.refreshToken(this.refreshToken);
@@ -302,9 +316,59 @@ public class AssignmentView {
         }
         fullHtml = fullHtml.replace("<div class=\"hint\">", "<div class=\"hint\"><span class=\"hint-span\">Hint: </span>");
 
+        // collect all img src links in arraylist
+        ArrayList<String> imgSrcLinks = new ArrayList<>();
+        ArrayList<String> changedImgSrcLinks = new ArrayList<>();
+        int imgIndex = fullHtml.indexOf("<img");
+        while (imgIndex != -1) {
+            int srcIndex = fullHtml.indexOf("src=\"", imgIndex);
+            int srcEndIndex = fullHtml.indexOf("\"", srcIndex + 5);
+            imgSrcLinks.add(fullHtml.substring(srcIndex + 5, srcEndIndex));
+            imgIndex = fullHtml.indexOf("<img", srcEndIndex);
+        }
+        System.out.println("Img src links: " + imgSrcLinks);
+        changedImgSrcLinks = convert32bitImageTo24Bit(imgSrcLinks);
+        System.out.println("Img src links: " + imgSrcLinks);
+        System.out.println("Changed img src links after conversion: " + changedImgSrcLinks);
+
+        // replace img src links in html
+        for (int i = 0; i < imgSrcLinks.size(); i++) {
+            fullHtml = fullHtml.replace(imgSrcLinks.get(i), changedImgSrcLinks.get(i));
+        }
+
+        /* ez már a képek kirajzolására van az OOP-nél | egyelőre nem működik, mivel 32-es bitmélységű képeket nem tud megjeleníteni a JEditorPane */
+        fullHtml = fullHtml.replace("width=\"50%\"", "");
+        if (fullHtml.contains("class='story'")) {
+            fullHtml = fullHtml.replace("img class='story'", "img class='story' width='512'");
+            //System.err.println("img class='story' found");    // tesztelésre
+        } else if (fullHtml.contains("class=\"story\"")) {
+            fullHtml = fullHtml.replace("img class=\"story\"", "img class='story' width='512'");
+            //System.err.println("img class=\"story\" found");  // tesztelésre
+        }
+//        //fullHtml = fullHtml.replace("src=\"https://inf.u-szeged.hu/~gmark/biro/prog1/gyak01_madar/img01.png\"", "src=\"file:C:\\Users\\Pali\\Downloads\\img01_24.png\"");
+//        //fullHtml = fullHtml.replace("src=\"https://inf.u-szeged.hu/~gmark/biro/prog1/gyak01_madar/img01.png\"", "src=\"https://inf.u-szeged.hu/~gmark/biro/prog1/gyak01_madar/img01.jpg\"");
+
         System.out.println(fullHtml);
         return fullHtml;
         //return renderer.render(document);
+    }
+
+    private ArrayList<String> convert32bitImageTo24Bit(ArrayList<String> changedImgSrcLinks) {
+        ArrayList<String> changedImgSrcLinksCopy = new ArrayList<>(changedImgSrcLinks);
+        for (int i = 0; i < changedImgSrcLinksCopy.size(); i++) {
+//            FileDownloader.downloadFile(imgSrcLink, "C:\\Users\\Pali\\Downloads");
+            String outputFilePath = "C:\\Users\\Pali\\Downloads\\biro-temp";
+            try {
+                //PNGConverter.downloadAndConvertImage(changedImgSrcLinksCopy.get(i), outputFilePath);
+                System.out.println("Image downloaded and converted: " + changedImgSrcLinksCopy.get(i));
+                //changedImgSrcLinksCopy.set(i, "file:" + outputFilePath);
+                changedImgSrcLinksCopy.set(i, "file:" + PNGConverter.downloadAndConvertImage(changedImgSrcLinksCopy.get(i), outputFilePath));
+                System.out.println("Image path changed: " + changedImgSrcLinksCopy.get(i));
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return changedImgSrcLinksCopy;
     }
 
     private void showMainForm() {

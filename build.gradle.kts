@@ -52,6 +52,11 @@ dependencies {
     implementation("com.google.code.gson:gson:2.8.9")
     implementation("org.commonmark:commonmark:0.18.2")
     implementation("org.commonmark:commonmark-ext-gfm-tables:0.18.2")
+    implementation("org.apache.xmlgraphics:batik-transcoder:1.16") {
+        exclude(group = "xerces", module = "xercesImpl")
+    }
+    implementation("org.apache.xmlgraphics:batik-codec:1.16")
+    implementation("xerces:xercesImpl:2.12.2")
 }
 
 // Configure IntelliJ Platform Gradle Plugin - read more: https://plugins.jetbrains.com/docs/intellij/tools-intellij-platform-gradle-plugin-extension.html

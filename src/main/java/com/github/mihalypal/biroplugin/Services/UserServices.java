@@ -154,6 +154,12 @@ public class UserServices {
         }
     }
 
+    /**
+     * Calls a GET API with the given URL and returns the response as a String.
+     *
+     * @param apiUrl The URL of the API to call.
+     * @return The response of the API as a String.
+     */
     public String callGetApi(String apiUrl) {
         StringBuilder response = new StringBuilder();
         try {
