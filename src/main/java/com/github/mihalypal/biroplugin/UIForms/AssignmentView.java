@@ -1,9 +1,11 @@
 package com.github.mihalypal.biroplugin.UIForms;
 
+import com.github.mihalypal.biroplugin.Model.StarterFile;
 import com.github.mihalypal.biroplugin.Services.FileDownloader;
 import com.github.mihalypal.biroplugin.appearanceChanges.CustomButtonUI;
 import com.github.mihalypal.biroplugin.appearanceChanges.CustomProgressBarUI;
 import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 //import com.vladsch.flexmark.util.data.MutableDataSet;
@@ -37,6 +39,8 @@ public class AssignmentView {
     private String Assignment;
     private UserServices userServices;
     private ArrayList<JsonObject> exercises;
+    private ArrayList<StarterFile> starterFiles;
+    private int currentExerciseId;
     private BiroUIMainForm biroUIMainForm;
     private JButton backToMainButton;
     private JPanel topPanel;
@@ -48,8 +52,9 @@ public class AssignmentView {
         this.Assignment = Assignment;
         this.userServices = new UserServices();
         this.exercises = new ArrayList<>();
+        this.starterFiles = new ArrayList<>();
 
-
+        // tokenek kiírása - tesztelésre
         System.out.println("Access token: " + accessToken);
         System.out.println("Refresh token: " + refreshToken);
         System.out.println("Assignment: " + Assignment);
@@ -61,7 +66,7 @@ public class AssignmentView {
         System.out.println("Current assignment: " + currentAssignment);
 
 
-        // TODO: check-avaibility request-el megnézni, hogy elérhető-e a feladat, mielőtt lekérem, mert IDE Error Occured lesz és meghal a plugin
+        // TODO: check-avaibility request-el megnézni, hogy elérhető-e a feladat, mielőtt lekérem, mert IDE Error Occured lesz és meghal a plugin | BiroUIMain-ben kell még !!!
         JsonObject exercisesOfTheAssignment = JsonParser.parseString(currentAssignment).getAsJsonObject();
         JsonArray exerciseStatuses = exercisesOfTheAssignment.get("exerciseStatuses").getAsJsonArray();
         System.out.println("Exercises of the assignment: " + exerciseStatuses);
@@ -193,20 +198,33 @@ public class AssignmentView {
         testForDownload.addActionListener(e -> {
             System.out.println("Letöltés gomb megnyomva");
             String assignedExerciseId = "";
-            JsonArray starterFiles = exercisesOfTheAssignment.get("starterFiles").getAsJsonArray();
-            System.out.println("Starter files: " + starterFiles);
-            try {
-                assignedExerciseId = exercises.get(0).get("assignedExerciseId").getAsString();
-            } catch (Exception exception) {
-                System.out.println("No assigned exercise id for this exercise.");
-            }
+//            try {
+//                assignedExerciseId = exercises.get(0).get("assignedExerciseId").getAsString();
+//            } catch (Exception exception) {
+//                System.out.println("No assigned exercise id for this exercise.");
+//            }
+//            JsonArray starterFiles = exercisesOfTheAssignment.get("starterFiles").getAsJsonArray();
+//            System.out.println("Starter files: " + starterFiles);
             String downloadFileUrl = "https://biro3.inf.u-szeged.hu/api/v1/students/exercises/206370/starterfiles/555";
-            try {
-                UserServices.refreshToken(this.refreshToken);
-                this.accessToken = UserServices.getAccessToken();
-                fileDownloader.downloadFile(downloadFileUrl/*, "C:\\Users\\Pali\\Downloads"*/, this.accessToken);
-            } catch (Exception exception) {
-                exception.printStackTrace();
+            for (StarterFile starterFile : this.starterFiles) {
+                System.err.println("Starter file: " + starterFile.getName());
+                try {
+                    assignedExerciseId = exercises.get(starterFile.getExerciseId()).get("assignedExerciseId").getAsString();
+                } catch (Exception exception) {
+                    System.out.println("No assigned exercise id for this exercise.");
+                }
+                if (starterFile.getExerciseId() == currentExerciseId) {
+                    System.err.println("Starter file: " + starterFile.getName() + " - " + starterFile.getId());
+                    downloadFileUrl = "https://biro3.inf.u-szeged.hu/api/v1/students/exercises/" + assignedExerciseId + "/starterfiles/" + starterFile.getId();
+                    try {
+                        UserServices.refreshToken(this.refreshToken);
+                        this.accessToken = UserServices.getAccessToken();
+                        FileDownloader.downloadFile(downloadFileUrl/*, "C:\\Users\\Pali\\Downloads"*/, this.accessToken, assignmentName, currentExerciseId);
+                        System.err.println("File downloaded: " + downloadFileUrl);
+                    } catch (Exception exception) {
+                        exception.printStackTrace();
+                    }
+                }
             }
         });
         bottomPanel.add(testForDownload);
@@ -235,10 +253,33 @@ public class AssignmentView {
 
     private void displayExercise(int index) {
         JsonObject exercise = exercises.get(index);
+
+        // törölni a listás, hogy az előző feladatokhoz tartozó fájlok ne maradjanak benne
+        this.starterFiles.clear();
+
         System.out.println("index: " + index);
         System.out.println("Exercise: " + exercise.get("assignedExerciseId").getAsString());
         JsonObject exerciseGetByAPI = JsonParser.parseString(userServices.callGetApi("https://biro3.inf.u-szeged.hu/api/v1/students/exercises/" + exercise.get("assignedExerciseId").getAsString())).getAsJsonObject();
         System.out.println("Exercise: " + exerciseGetByAPI.toString());
+
+        // get the starterfiles
+        JsonArray starterFiles = exerciseGetByAPI.get("starterFiles").getAsJsonArray();
+        for (JsonElement je : starterFiles) {
+            System.err.println("ID: " + je.getAsJsonObject().get("starterFileId").getAsString());
+            System.err.println("filename: " + je.getAsJsonObject().get("filename").getAsString());
+            StarterFile starterFile = new StarterFile(
+                    je.getAsJsonObject().get("starterFileId").getAsInt(),
+                    je.getAsJsonObject().get("filename").getAsString(),
+                    je.getAsJsonObject().get("viewable").getAsBoolean(),
+                    je.getAsJsonObject().get("copyable").getAsBoolean(),
+                    je.getAsJsonObject().get("downloadable").getAsBoolean(),
+                    index
+            );
+            this.starterFiles.add(starterFile);
+        }
+
+        // set the current exerciseId
+        this.currentExerciseId = index;
 
         //display the reached / max score of the exercise
         int reachedScore = 0;

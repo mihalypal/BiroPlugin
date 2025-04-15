@@ -6,13 +6,16 @@ public class StarterFile {
     private boolean viewable;
     private boolean copyable;
     private boolean downloadable;
+    private int exerciseId;
 
-    public StarterFile(int id, String name, boolean viewable, boolean copyable, boolean downloadable) {
+
+    public StarterFile(int id, String name, boolean viewable, boolean copyable, boolean downloadable, int exerciseId) {
         this.id = id;
         this.name = name;
         this.viewable = viewable;
         this.copyable = copyable;
         this.downloadable = downloadable;
+        this.exerciseId = exerciseId;
     }
 
     public int getId() {
@@ -53,5 +56,13 @@ public class StarterFile {
 
     public void setDownloadable(boolean downloadable) {
         this.downloadable = downloadable;
+    }
+
+    public int getExerciseId() {
+        return exerciseId;
+    }
+
+    public void setExerciseId(int exerciseId) {
+        this.exerciseId = exerciseId;
     }
 }
