@@ -219,7 +219,7 @@ public class AssignmentView {
                     try {
                         UserServices.refreshToken(this.refreshToken);
                         this.accessToken = UserServices.getAccessToken();
-                        FileDownloader.downloadFile(downloadFileUrl/*, "C:\\Users\\Pali\\Downloads"*/, this.accessToken);
+                        FileDownloader.downloadFile(downloadFileUrl/*, "C:\\Users\\Pali\\Downloads"*/, this.accessToken, assignmentName, currentExerciseId);
                         System.err.println("File downloaded: " + downloadFileUrl);
                     } catch (Exception exception) {
                         exception.printStackTrace();
@@ -253,6 +253,10 @@ public class AssignmentView {
 
     private void displayExercise(int index) {
         JsonObject exercise = exercises.get(index);
+
+        // törölni a listás, hogy az előző feladatokhoz tartozó fájlok ne maradjanak benne
+        this.starterFiles.clear();
+
         System.out.println("index: " + index);
         System.out.println("Exercise: " + exercise.get("assignedExerciseId").getAsString());
         JsonObject exerciseGetByAPI = JsonParser.parseString(userServices.callGetApi("https://biro3.inf.u-szeged.hu/api/v1/students/exercises/" + exercise.get("assignedExerciseId").getAsString())).getAsJsonObject();

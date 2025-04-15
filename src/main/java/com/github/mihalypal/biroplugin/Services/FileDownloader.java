@@ -112,8 +112,11 @@ package com.github.mihalypal.biroplugin.Services;
 
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
 public class FileDownloader {
@@ -125,7 +128,7 @@ public class FileDownloader {
      * @param accessToken Az API hozzáférési token.
      * @throws IOException Ha a letöltés vagy mentés közben hiba lép fel.
      */
-    public static void downloadFile(String fileURL, String accessToken) throws IOException {
+    public static void downloadFile(String fileURL, String accessToken, String assignmentName, int exerciseIndex) throws IOException {
         // Lekérjük az aktuális projektet
         Project project = ProjectManager.getInstance().getOpenProjects()[0]; // Az első megnyitott projektet vesszük
         if (project == null) {
@@ -140,6 +143,59 @@ public class FileDownloader {
             return;
         }
 
+        // feladatsor és feladat mappák nevének generálása
+        String assignmentFolder = normalizeName(assignmentName);
+        if (!assignmentFolder.startsWith("_")) {
+            assignmentFolder = "_" + assignmentFolder;
+        }
+        String exerciseFolder = "feladat_" + String.format("%02d", exerciseIndex + 1);
+
+        // Mappa: src/_assignment/feladat_xx
+        File targetDir = new File(projectBasePath + File.separator + "src", assignmentFolder + File.separator + exerciseFolder);
+        if (!targetDir.exists() && !targetDir.mkdirs()) {
+            System.err.println("Nem sikerült létrehozni a mappát: " + targetDir.getAbsolutePath());
+            return;
+        }
+
+        // Fájl lekérése
+        String jsonResponse = fetchFileData(fileURL, accessToken);
+        if (jsonResponse == null) {
+            System.out.println("Failed to fetch file.");
+            return;
+        }
+
+        String fileName = extractJsonValue(jsonResponse, "filename");
+        String fileContentBase64 = extractJsonValue(jsonResponse, "content");
+        if (fileName == null || fileContentBase64 == null) {
+            System.out.println("Invalid JSON data.");
+            return;
+        }
+
+        // Fájlnév ellenőrzés, egyediség
+        File outputFile = getUniqueFileName(targetDir, fileName);
+
+        // Tartalom dekódolása és package sor beszúrása
+        byte[] decodedBytes = Base64.getDecoder().decode(fileContentBase64);
+        String fileContent = new String(decodedBytes, StandardCharsets.UTF_8);
+
+        if (fileName.endsWith(".java")) {
+            String packageLine = "package " + assignmentFolder + "." + exerciseFolder + ";\n\n";
+            fileContent = packageLine + fileContent;
+        }
+
+        // Fájl kiírása
+        try (FileOutputStream fos = new FileOutputStream(outputFile)) {
+            fos.write(fileContent.getBytes(StandardCharsets.UTF_8));
+        }
+
+        // projekt struktúra frissítés, hogy megjelenjenek a letöltött fájlok
+        VirtualFile vf = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(outputFile);
+        if (vf != null) {
+            vf.refresh(false, false); // vagy true,true ha mappa
+        }
+
+        System.out.println("File saved: " + outputFile.getAbsolutePath());
+/*
         // A `src` mappa elérési útja
         File srcDir = new File(projectBasePath, "src");
         if (!srcDir.exists()) {
@@ -181,7 +237,7 @@ public class FileDownloader {
             fos.write(fileData);
         }
 
-        System.out.println("File saved successfully to: " + outputFile.getAbsolutePath());
+        System.out.println("File saved successfully to: " + outputFile.getAbsolutePath());*/
     }
 
     // Segédfüggvény JSON letöltésére az API-ról
@@ -245,4 +301,20 @@ public class FileDownloader {
         }
         return file;
     }
+
+    /**
+     * Normalizálja a fájlnevet, eltávolítja a pontokat, szóközöket és ékezetes karaktereket.
+     *
+     * @param name A fájl neve.
+     * @return A normalizált fájlnév.
+     */
+    private static String normalizeName(String name) {
+        String base = name.toLowerCase()
+                .replace(".", "")     // pont eltávolítása
+                .replace(" ", "_")
+                .replace("-", "_");
+        String normalized = java.text.Normalizer.normalize(base, java.text.Normalizer.Form.NFD);
+        return normalized.replaceAll("[^\\p{ASCII}]", "").replaceAll("[^a-z0-9_]", "");
+    }
+
 }
