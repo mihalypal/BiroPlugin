@@ -49,7 +49,7 @@ dependencies {
         testFramework(TestFrameworkType.Platform)
     }
 
-    implementation("com.google.code.gson:gson:2.8.9")
+    implementation("com.google.code.gson:gson:2.13.0")
     implementation("org.commonmark:commonmark:0.18.2")
     implementation("org.commonmark:commonmark-ext-gfm-tables:0.18.2")
     implementation("org.apache.xmlgraphics:batik-transcoder:1.16") {
