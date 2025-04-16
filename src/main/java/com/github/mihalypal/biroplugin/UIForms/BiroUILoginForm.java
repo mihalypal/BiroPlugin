@@ -15,6 +15,7 @@ import java.util.Map;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.PathManager;
 
 import com.github.mihalypal.biroplugin.Services.UserServices;
@@ -48,7 +49,10 @@ public class BiroUILoginForm {
             rememberMeCheckBox.setSelected(true);
         }
 
-        SwingUtilities.invokeLater(() -> usernameTextField.requestFocusInWindow());
+        //SwingUtilities.invokeLater(() -> usernameTextField.requestFocusInWindow());   // IDE Error-t dobott, lenti verzióra lett cserélve
+        ApplicationManager.getApplication().invokeLater(() -> {
+            usernameTextField.requestFocusInWindow();
+        });
 
         ActionListener loginAction = e -> {
             String username = usernameTextField.getText();

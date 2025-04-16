@@ -43,7 +43,7 @@ dependencies {
         // Plugin Dependencies. Uses `platformPlugins` property from the gradle.properties file for plugin from JetBrains Marketplace.
         plugins(providers.gradleProperty("platformPlugins").map { it.split(',') })
 
-        instrumentationTools()
+        //instrumentationTools()  // deprecated - no longer necessary | maybe remove in the future
         pluginVerifier()
         zipSigner()
         testFramework(TestFrameworkType.Platform)
@@ -52,7 +52,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.13.0")
     implementation("org.commonmark:commonmark:0.18.2")
     implementation("org.commonmark:commonmark-ext-gfm-tables:0.18.2")
-    implementation("org.apache.xmlgraphics:batik-transcoder:1.16") {
+    implementation("org.apache.xmlgraphics:batik-transcoder:1.17") {
         exclude(group = "xerces", module = "xercesImpl")
     }
     implementation("org.apache.xmlgraphics:batik-codec:1.16")
