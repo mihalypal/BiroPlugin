@@ -12,22 +12,15 @@ import java.util.ArrayList;
 public class BiroUIMainForm {
     private JPanel mainPanel;
     private JButton tokenRefreshTest;
-    private DefaultListModel<String> listModel;
     private DefaultListModel<String> subjectAssignmentList;
     private JList<String> list1;
     private JList<String> list2;
     private JButton openAssignmentButton;
-    private String accessToken;
-    private String refreshToken;
-    private UserServices userServices;
 
     public BiroUIMainForm(String accessToken, String refreshToken) {
-        this.accessToken = accessToken;
-        this.refreshToken = refreshToken;
-        userServices = new UserServices();
-        userServices.setAccessToken(accessToken);
-        userServices.setRefreshToken(refreshToken);
-        listModel = new DefaultListModel<>();
+        UserServices.setAccessToken(accessToken);
+        UserServices.setRefreshToken(refreshToken);
+        DefaultListModel<String> listModel = new DefaultListModel<>();
         subjectAssignmentList = new DefaultListModel<>();
         ArrayList<String> subjectNamesWithIds = new ArrayList<>();
         ArrayList<String> allAssignmentsOfSelectedSubject = new ArrayList<>();
@@ -38,14 +31,14 @@ public class BiroUIMainForm {
         tokenRefreshTest.addActionListener(e -> {
             //System.out.println("Access token: " + accessToken);
             //System.out.println("Refresh token: " + refreshToken);
-            System.out.println("Access token: " + userServices.getAccessToken());
-            System.out.println("Refresh token: " + userServices.getRefreshToken());
-            userServices.refreshToken(refreshToken);
-            System.out.println("Access token: " + userServices.getAccessToken());
-            System.out.println("Refresh token: " + userServices.getRefreshToken());
+            System.out.println("Access token: " + UserServices.getAccessToken());
+            System.out.println("Refresh token: " + UserServices.getRefreshToken());
+            UserServices.refreshToken(refreshToken);
+            System.out.println("Access token: " + UserServices.getAccessToken());
+            System.out.println("Refresh token: " + UserServices.getRefreshToken());
         });
 
-        String subjects = userServices.callGetApi("https://biro3.inf.u-szeged.hu/api/v1/students/subject-instances");
+        String subjects = UserServices.callGetApi("https://biro3.inf.u-szeged.hu/api/v1/students/subject-instances");
         String[] subjectInstances = subjects.split("\\},\\{");
         // Get the subjects in String Array with JSON format
         for (int i = 0; i < subjectInstances.length; i++) {
@@ -98,7 +91,7 @@ public class BiroUIMainForm {
 
             // Next is to parse the JSON response and display the assignments on UI with list elements
             // The assignments can be selected and an ActionListener can be opened to display the details and assign the exercises
-            /**
+            /*             * Az assignments JSON objektum tartalmazza a következő
              * kulcsok:
              * assignmentAssignedStudentId - kell az API híváshoz
              * startTime - kezdési időpont
@@ -146,9 +139,8 @@ public class BiroUIMainForm {
             // Vagy elsőre lekéri az összes tárgyat és azokhoz tartozó számonkéréseket.
         });
 
-        list2.addListSelectionListener(e -> {
-            System.out.println("Selected: " + list2.getSelectedValue());
-        });
+        // test output
+        list2.addListSelectionListener(e -> System.out.println("Selected: " + list2.getSelectedValue()));
 
         openAssignmentButton.addActionListener(e -> {
             //System.out.println("Selected: " + list2.getSelectedValue()); // test output
@@ -174,7 +166,7 @@ public class BiroUIMainForm {
 
     // api: https://biro3.inf.u-szeged.hu/api/v1/students/subject-instances/4/assignments
     private String apiCall(String url) {
-        return userServices.callGetApi(url);
+        return UserServices.callGetApi(url);
     }
 
     public JPanel getMainPanel() {

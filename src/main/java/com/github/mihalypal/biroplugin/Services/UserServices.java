@@ -9,10 +9,6 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
-import java.util.List;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 
 public class UserServices {
     private static String accessToken;
@@ -98,7 +94,7 @@ public class UserServices {
         return accessToken;
     }
 
-    public String getRefreshToken() {
+    public static String getRefreshToken() {
         return refreshToken;
     }
 
@@ -106,7 +102,7 @@ public class UserServices {
         UserServices.accessToken = accessToken;
     }
 
-    public void setRefreshToken(String refreshToken) {
+    public static void setRefreshToken(String refreshToken) {
         UserServices.refreshToken = refreshToken;
     }
 
@@ -160,7 +156,7 @@ public class UserServices {
      * @param apiUrl The URL of the API to call.
      * @return The response of the API as a String.
      */
-    public String callGetApi(String apiUrl) {
+    public static String callGetApi(String apiUrl) {
         StringBuilder response = new StringBuilder();
         try {
             refreshToken(refreshToken);

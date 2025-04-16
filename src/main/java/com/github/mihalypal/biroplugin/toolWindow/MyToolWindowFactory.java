@@ -7,6 +7,9 @@ import com.intellij.openapi.wm.ToolWindowFactory;
 import com.intellij.openapi.wm.ToolWindowManager;
 import com.intellij.ui.content.Content;
 import com.intellij.ui.content.ContentFactory;
+import org.jetbrains.annotations.NotNull;
+
+import java.util.Objects;
 
 public class MyToolWindowFactory implements ToolWindowFactory {
 
@@ -17,7 +20,7 @@ public class MyToolWindowFactory implements ToolWindowFactory {
     }
 
     @Override
-    public void createToolWindowContent(Project project, ToolWindow toolWindow) {
+    public void createToolWindowContent(@NotNull Project project, ToolWindow toolWindow) {
         MyToolWindowUI myToolWindowUI = new MyToolWindowUI();
         ContentFactory contentFactory = ContentFactory.getInstance();
         Content content = contentFactory.createContent(myToolWindowUI.getMainPanel(), "", false);
@@ -26,11 +29,11 @@ public class MyToolWindowFactory implements ToolWindowFactory {
         // Set ToolWindows anchor to right
         //toolWindow.setTitle("Bíró Plugin");
         ToolWindowManager toolWindowManager = ToolWindowManager.getInstance(project);
-        toolWindowManager.getToolWindow("Bíró").setAnchor(com.intellij.openapi.wm.ToolWindowAnchor.RIGHT, null);
+        Objects.requireNonNull(toolWindowManager.getToolWindow("Bíró")).setAnchor(com.intellij.openapi.wm.ToolWindowAnchor.RIGHT, null);
     }
 
     @Override
-    public boolean shouldBeAvailable(Project project) {
+    public boolean shouldBeAvailable(@NotNull Project project) {
         return true;
     }
 }

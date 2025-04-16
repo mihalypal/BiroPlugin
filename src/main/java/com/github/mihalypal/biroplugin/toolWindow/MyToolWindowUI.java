@@ -7,7 +7,7 @@ import javax.swing.*;
 
 public class MyToolWindowUI {
 
-    private BiroUILoginForm biroUILoginForm;
+    private final BiroUILoginForm biroUILoginForm;
 
     private JPanel mainPanel;
     private JBLabel label;

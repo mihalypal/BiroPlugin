@@ -10,10 +10,7 @@ import java.io.StringReader;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 
-import com.intellij.ui.JBColor;
 import org.apache.batik.transcoder.TranscoderInput;
-import org.apache.batik.transcoder.TranscoderOutput;
-import com.github.mihalypal.biroplugin.Services.BufferedImageTranscoder;
 
 import static org.apache.batik.transcoder.image.ImageTranscoder.KEY_BACKGROUND_COLOR;
 

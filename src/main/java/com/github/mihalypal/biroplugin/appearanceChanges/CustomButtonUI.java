@@ -33,21 +33,12 @@ public class CustomButtonUI extends BasicButtonUI {
         // Engedélyezzük az élsimítást a jobb megjelenés érdekében
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        Color backgroundColor;
-        switch (status) {
-            case "INFO":
-                backgroundColor = new Color(50, 130, 200, 180); // Kék
-                break;
-            case "COMPLETED":
-                backgroundColor = new Color(255, 165, 0, 180); // Narancssárga
-                break;
-            case "MAX":
-                backgroundColor = new Color(0, 200, 0, 200); // Zöld
-                break;
-            default:
-                backgroundColor = new Color(100, 100, 100, 150); // Szürke default
-                break;
-        }
+        Color backgroundColor = switch (status) {
+            case "INFO" -> new Color(50, 130, 200, 180); // Kék
+            case "COMPLETED" -> new Color(255, 165, 0, 180); // Narancssárga
+            case "MAX" -> new Color(0, 200, 0, 200); // Zöld
+            default -> new Color(100, 100, 100, 150); // Szürke default
+        };
 
         // Háttérszín és lekerekített sarkok
         //g2.setColor(new Color(0, 200, 0, 150)); // Erősebb zöld, áttetsző háttér
