@@ -55,7 +55,7 @@ dependencies {
     implementation("org.apache.xmlgraphics:batik-transcoder:1.17") {
         exclude(group = "xerces", module = "xercesImpl")
     }
-    implementation("org.apache.xmlgraphics:batik-codec:1.16")
+    implementation("org.apache.xmlgraphics:batik-codec:1.18")
     implementation("xerces:xercesImpl:2.12.2")
 }
 
