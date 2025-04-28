@@ -36,6 +36,7 @@ public class CustomButtonUI extends BasicButtonUI {
         Color backgroundColor = switch (status) {
             case "INFO" -> new Color(50, 130, 200, 180); // Kék
             case "COMPLETED" -> new Color(255, 165, 0, 180); // Narancssárga
+            case "COMPLETED_ZERO" -> new Color(255, 165, 0, 180); // Narancssárga
             case "MAX" -> new Color(0, 200, 0, 200); // Zöld
             default -> new Color(100, 100, 100, 150); // Szürke default
         };

@@ -18,8 +18,6 @@ import java.util.regex.Pattern;
 import com.intellij.openapi.application.ApplicationManager;
 import com.intellij.openapi.application.PathManager;
 
-import com.github.mihalypal.biroplugin.Services.UserServices;
-
 public class BiroUILoginForm {
 
     private JPanel mainPanel;

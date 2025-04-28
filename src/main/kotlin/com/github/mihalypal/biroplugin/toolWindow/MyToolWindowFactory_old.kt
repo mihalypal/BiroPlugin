@@ -9,7 +9,7 @@ import com.intellij.ui.components.JBLabel
 import com.intellij.ui.components.JBPanel
 import com.intellij.ui.content.ContentFactory
 import com.github.mihalypal.biroplugin.MyBundle
-import com.github.mihalypal.biroplugin.services.MyProjectService
+import com.github.mihalypal.biroplugin.Services.MyProjectService
 import javax.swing.JButton
 
 
