@@ -18,8 +18,7 @@ public class UploadService {
     private String accessToken;  // „Bearer …” tokened
 
     public UploadService() {
-        UserServices.refreshToken(UserServices.getRefreshToken());
-        this.accessToken = UserServices.getAccessToken();
+
     }
 
     /**
@@ -35,6 +34,9 @@ public class UploadService {
         System.out.println("Files: " + files);
         System.out.println("Base URL: " + PluginConstants.BASE_URL);
 
+        // refresh the token
+        UserServices.refreshToken(UserServices.getRefreshToken());
+
         String boundary = "----WebKitFormBoundary" + System.currentTimeMillis();
         URL url = new URL(PluginConstants.BASE_URL
                 + "/api/v1/students/exercises/"
@@ -42,7 +44,7 @@ public class UploadService {
                 + "/submissions");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
-        conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+        conn.setRequestProperty("Authorization", "Bearer " + UserServices.getAccessToken());
         conn.setRequestProperty("Accept", "application/json");
         conn.setRequestProperty("Accept-Language", "hu");
         conn.setRequestProperty("Content-Type",
@@ -108,10 +110,13 @@ public class UploadService {
 
     /** 2a. Egyszeri státuszlekérdezés. */
     public SubmissionStatus fetchSubmissionStatus(int submissionId) throws IOException {
+        // refresh the token
+        UserServices.refreshToken(UserServices.getRefreshToken());
+
         URL url = new URL(PluginConstants.BASE_URL + "/api/v1/students/submissions/" + submissionId + "/status");
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
-        conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+        conn.setRequestProperty("Authorization", "Bearer " + UserServices.getAccessToken());
         conn.setRequestProperty("Accept", "application/json");
         conn.setRequestProperty("Accept-Language", "hu");
 
@@ -152,10 +157,13 @@ public class UploadService {
 
     /** 3. Assignment lekérése JSON-ként. */
     public JsonObject fetchAssignment(int assignmentId) throws IOException {
+        // refresh the token
+        UserServices.refreshToken(UserServices.getRefreshToken());
+
         URL url = new URL(PluginConstants.BASE_URL + "/api/v1/students/assignments/" + assignmentId);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
-        conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+        conn.setRequestProperty("Authorization", "Bearer " + UserServices.getAccessToken());
         conn.setRequestProperty("Accept", "application/json");
         conn.setRequestProperty("Accept-Language", "hu");
 
@@ -170,10 +178,13 @@ public class UploadService {
 
     /** 4. Exercise részletek lekérése JSON-ként. */
     public JsonObject fetchExercise(int exerciseId) throws IOException {
+        // refresh the token
+        UserServices.refreshToken(UserServices.getRefreshToken());
+
         URL url = new URL(PluginConstants.BASE_URL + "/api/v1/students/exercises/" + exerciseId);
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("GET");
-        conn.setRequestProperty("Authorization", "Bearer " + accessToken);
+        conn.setRequestProperty("Authorization", "Bearer " + UserServices.getAccessToken());
         conn.setRequestProperty("Accept", "application/json");
         conn.setRequestProperty("Accept-Language", "hu");
 

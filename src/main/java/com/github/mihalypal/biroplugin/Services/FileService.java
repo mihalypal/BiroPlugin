@@ -119,6 +119,7 @@ import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
 import com.intellij.openapi.roots.ModuleRootModificationUtil;
 import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VfsUtil;
 import com.intellij.openapi.vfs.VirtualFile;
 
 import java.io.*;
@@ -207,7 +208,9 @@ public class FileService {
 
         // Package-be rendezős megoldás
         // Lekérjük az aktuális projektet
-        Project project = ProjectManager.getInstance().getOpenProjects()[0]; // Az első megnyitott projektet vesszük
+        Project[] open = ProjectManager.getInstance().getOpenProjects();
+        if (open.length == 0) return;
+        Project project = open[0];
         if (project == null) {
             System.out.println("No open project found.");
             return;
@@ -275,10 +278,22 @@ public class FileService {
             fos.write(fileContent.getBytes(StandardCharsets.UTF_8));
         }
 
-        // projekt struktúra frissítés, hogy megjelenjenek a letöltött fájlok
-        VirtualFile vf = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(outputFile);
-        if (vf != null) {
-            vf.refresh(false, false); // vagy true,true ha mappa
+        // projekt struktúra frissítés, hogy megjelenjenek a letöltött fájlok ---- Erre IDE Error Occured lesz
+//        VirtualFile vf = LocalFileSystem.getInstance().refreshAndFindFileByIoFile(outputFile);
+//        if (vf != null) {
+//            vf.refresh(false, false); // vagy true,true ha mappa
+//        }
+        LocalFileSystem lfs = LocalFileSystem.getInstance();
+        // ez visszaadja, vagy létrehozza a VirtualFile-t, de NEM schedule-ol UI-t
+        VirtualFile vf2 = lfs.refreshAndFindFileByIoFile(outputFile);
+        if (vf2 != null) {
+            // synchron módon dirt-eljük és refresh-eljük, explicit false-as async paraméterrel
+            VfsUtil.markDirtyAndRefresh(
+                    false,   // async = false → nem invokeLater
+                    false,   // recursive = false → csak ezt a fájlt
+                    false,   // reloadChildren (nem könyvtár), false
+                    vf2
+            );
         }
 
         System.out.println("File saved: " + outputFile.getAbsolutePath());

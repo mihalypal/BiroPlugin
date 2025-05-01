@@ -22,8 +22,10 @@ import com.intellij.notification.Notification;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
 import com.intellij.openapi.project.Project;
 import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.vfs.LocalFileSystem;
 import com.intellij.openapi.vfs.VirtualFile;
 import org.commonmark.Extension;
 import org.commonmark.node.*;
@@ -34,6 +36,7 @@ import org.commonmark.ext.gfm.tables.TablesExtension;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.io.File;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -271,13 +274,17 @@ public class AssignmentView {
             }
         });
         bottomPanel.add(testForDownload);
-        bottomPanel.setMinimumSize(new Dimension(Integer.MAX_VALUE, 200));
-        bottomPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, 200));
+        bottomPanel.setMinimumSize(new Dimension(Integer.MAX_VALUE, 100));
+        bottomPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, 100));
 
         JButton uploadButton = new JButton("Fájl(ok) feltöltése");
         uploadButton.addActionListener((ActionEvent e) -> {
             System.out.println("Feltöltés gomb megnyomva");
-            Project project = ProjectManager.getInstance().getOpenProjects()[0];
+            // Elmenteni az összes változtatást, ha a user elfelejti és nincs autosave bekapcsolva
+            FileDocumentManager.getInstance().saveAllDocuments();
+            Project[] open = ProjectManager.getInstance().getOpenProjects();
+            if (open.length == 0) return;
+            Project project = open[0];
             if (project == null) return;
 
             FileUploadDialog fileUploadDialog = new FileUploadDialog(project);
@@ -298,7 +305,7 @@ public class AssignmentView {
 
                         // 3b) Polling 2s-kel
                         UploadService.SubmissionStatus status =
-                                uploadService.waitUntilEvaluated(submissionId, 2_000);
+                                uploadService.waitUntilEvaluated(submissionId, 1_000);
 
                         // 3c) Lekérjük a frissített assignmentet és exercise-t
                         JsonObject updatedAssignment = uploadService.fetchAssignment(assignment.getAssignmentAssignedStudentId());
@@ -315,20 +322,28 @@ public class AssignmentView {
                             Notifications.Bus.notify(
                                     new Notification("Accepted language levels",
                                             "Feltöltés kész",
-                                            "Állapot: " + status.state
+                                            "Állapot: " + (status.state.equals("EVALUATED") ? "Sikeres feltöltés" : "Valami még nem jó")
                                                     + (status.score != null
                                                     ? ", pontszám: " + status.score + "/" + status.maxScore
+                                                    : "")
+                                                    + (status.score != null
+                                                    ? ((status.score == status.maxScore)
+                                                    ? "\nGratulálok, szép munka!"
+                                                    : "")
                                                     : ""),
                                             NotificationType.INFORMATION),
                                     project
                             );
                         });
                     } catch (Exception ex) {
+                        // TODO: Megtudni milyen ERROR jön vissza, ha megoldás közben lejár az idő a beadásra és azt is lekezelni
                         SwingUtilities.invokeLater(() ->
                                 Notifications.Bus.notify(
                                         new Notification("Find Problems",
                                                 "Hiba a feltöltés során",
-                                                ex.getMessage(),
+                                                (ex.getMessage().contains("Sikertelen beadás: feltöltési limit elérve")
+                                                        ? "Sikertelen beadás: feltöltési limit elérve"
+                                                        : "Hiba a feltöltés során: " + ex.getMessage()),
                                                 NotificationType.ERROR),
                                         project
                                 )
@@ -519,21 +534,42 @@ public class AssignmentView {
 
     private ArrayList<String> convert32bitImageTo24Bit(ArrayList<String> changedImgSrcLinks) {
         ArrayList<String> changedImgSrcLinksCopy = new ArrayList<>(changedImgSrcLinks);
+
+        // projekt gyökér és temp mappa előkészítése csak egyszer
+        Project[] open = ProjectManager.getInstance().getOpenProjects();
+        if (open.length == 0) return new ArrayList<>();
+        Project project = open[0];
+        String tempDir = project.getBasePath() + File.separator + "biro-temp";
+        File tempDirFile = new File(tempDir);
+        if (!tempDirFile.exists()) {
+            tempDirFile.mkdirs();
+        }
+
         for (int i = 0; i < changedImgSrcLinksCopy.size(); i++) {
-//            FileDownloader.downloadFile(imgSrcLink, "C:\\Users\\Pali\\Downloads");
-            String outputFilePath = "C:\\Users\\Pali\\Downloads\\biro-temp";
+            String imageUrl = changedImgSrcLinksCopy.get(i);
             try {
-                //PNGConverter.downloadAndConvertImage(changedImgSrcLinksCopy.get(i), outputFilePath);
-                System.out.println("Image downloaded and converted: " + changedImgSrcLinksCopy.get(i));
-                //changedImgSrcLinksCopy.set(i, "file:" + outputFilePath);
-                changedImgSrcLinksCopy.set(i, "file:" + PNGConverter.downloadAndConvertImage(changedImgSrcLinksCopy.get(i), outputFilePath));
-                System.out.println("Image path changed: " + changedImgSrcLinksCopy.get(i));
+                // letöltés + konvertálás, visszakapott teljes elérési út
+                String localPath = PNGConverter.downloadAndConvertImage(imageUrl, tempDir);
+
+                // VFS-frissítés és VirtualFile lekérése
+                File ioFile = new File(localPath);
+                VirtualFile vf = LocalFileSystem.getInstance()
+                        .refreshAndFindFileByIoFile(ioFile);
+                if (vf != null) {
+                    changedImgSrcLinksCopy.set(i, new File(localPath).toURI().toString().replace("file://", "file:"));//vf.getUrl().replace("file://", "file:"));   //vf IDE ERROR Occured lesz, ha indexing előtt bezárod a dialogot
+                } else {
+                    // ha nem találja, fallback a manuális file:// URL-re
+                    changedImgSrcLinksCopy.set(i, new File(localPath).toURI().toString().replace("file://", "file:"));
+                }
             } catch (Exception e) {
                 e.printStackTrace();
+                // hiba esetén az eredeti URL marad
             }
         }
+
         return changedImgSrcLinksCopy;
     }
+
 
     private String checkJsonObjectIsNull(JsonElement je) {
         return (je != null && !je.isJsonNull()) ? je.getAsString() : "null";
