@@ -1,4 +1,4 @@
-package com.github.mihalypal.biroplugin.services
+package com.github.mihalypal.biroplugin.Services
 
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.diagnostic.thisLogger

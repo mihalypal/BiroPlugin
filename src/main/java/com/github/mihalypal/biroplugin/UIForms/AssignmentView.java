@@ -1,9 +1,13 @@
 package com.github.mihalypal.biroplugin.UIForms;
 
+import com.github.mihalypal.biroplugin.Dialog.FileUploadDialog;
+import com.github.mihalypal.biroplugin.Model.Assignment;
+import com.github.mihalypal.biroplugin.Model.ExerciseStatus;
 import com.github.mihalypal.biroplugin.Model.StarterFile;
-import com.github.mihalypal.biroplugin.Services.FileDownloader;
+import com.github.mihalypal.biroplugin.Services.FileService;
 import com.github.mihalypal.biroplugin.appearanceChanges.CustomButtonUI;
 import com.github.mihalypal.biroplugin.appearanceChanges.CustomProgressBarUI;
+import com.github.mihalypal.biroplugin.Services.UploadService;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -14,6 +18,15 @@ import com.google.gson.JsonParser;
 import com.github.mihalypal.biroplugin.Services.UserServices;
 import com.github.mihalypal.biroplugin.Services.PNGConverter;
 
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationType;
+import com.intellij.notification.Notifications;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.fileEditor.FileDocumentManager;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
+import com.intellij.openapi.vfs.LocalFileSystem;
+import com.intellij.openapi.vfs.VirtualFile;
 import org.commonmark.Extension;
 import org.commonmark.node.*;
 import org.commonmark.parser.Parser;
@@ -22,7 +35,9 @@ import org.commonmark.ext.gfm.tables.TablesExtension;
 
 import javax.swing.*;
 import java.awt.*;
-import java.awt.image.BufferedImage;
+import java.awt.event.ActionEvent;
+import java.io.File;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -36,7 +51,6 @@ public class AssignmentView {
     private JPanel exercisePanel;
     private String accessToken;
     private String refreshToken;
-    private String Assignment;
     private UserServices userServices;
     private ArrayList<JsonObject> exercises;
     private ArrayList<StarterFile> starterFiles;
@@ -44,32 +58,63 @@ public class AssignmentView {
     private BiroUIMainForm biroUIMainForm;
     private JButton backToMainButton;
     private JPanel topPanel;
-    private FileDownloader fileDownloader;
+    private FileService fileDownloader;
+    private final UploadService uploadService;
+    private List<JButton> exerciseButtons;
 
-    public AssignmentView(String accessToken, String refreshToken, String Assignment) {
+    public AssignmentView(String accessToken, String refreshToken, String AssignmentTextFromMainForm) {
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;
-        this.Assignment = Assignment;
         this.userServices = new UserServices();
         this.exercises = new ArrayList<>();
         this.starterFiles = new ArrayList<>();
+        this.uploadService = new UploadService();
+        this.exerciseButtons = new ArrayList<>();
 
         // tokenek kiírása - tesztelésre
         System.out.println("Access token: " + accessToken);
         System.out.println("Refresh token: " + refreshToken);
-        System.out.println("Assignment: " + Assignment);
+        System.out.println("Assignment: " + AssignmentTextFromMainForm);
 
         // get the concrete assignment
-        JsonObject wholeAssignmentJson = JsonParser.parseString(Assignment).getAsJsonObject();
+        JsonObject wholeAssignmentJson = JsonParser.parseString(AssignmentTextFromMainForm).getAsJsonObject();
         String assignmentStudentId = wholeAssignmentJson.get("assignmentAssignedStudentId").getAsString();
         String currentAssignment = userServices.callGetApi("https://biro3.inf.u-szeged.hu/api/v1/students/assignments/" + assignmentStudentId);
+        JsonObject currentAssignmentJson = JsonParser.parseString(currentAssignment).getAsJsonObject();
+        currentAssignmentJson = currentAssignmentJson.get("assignmentDetails").getAsJsonObject();
         System.out.println("Current assignment: " + currentAssignment);
+
+        Assignment assignment = new Assignment();
+        assignment.setAssignmentAssignedStudentId(checkJsonObjectIsNullInt(currentAssignmentJson.get("assignmentAssignedStudentId")));
+        assignment.setStartTime(LocalDateTime.parse(checkJsonObjectIsNull(currentAssignmentJson.get("startTime"))));
+        assignment.setEndTime(LocalDateTime.parse(checkJsonObjectIsNull(currentAssignmentJson.get("endTime"))));
+        assignment.setAssignmentName(checkJsonObjectIsNull(currentAssignmentJson.get("assignmentName")));
+        assignment.setAssignmentDescription(checkJsonObjectIsNull(currentAssignmentJson.get("assignmentDescription")));
+        assignment.setAssignmentType(checkJsonObjectIsNull(currentAssignmentJson.get("assignmentType")));
+        assignment.setMaxScore(checkJsonObjectIsNullInt(currentAssignmentJson.get("maxScore")));
+        assignment.setMinScore(checkJsonObjectIsNullInt(currentAssignmentJson.get("minScore")));
+        assignment.setScore(checkJsonObjectIsNullInt(currentAssignmentJson.get("score")));
+        assignment.setSubjectName(checkJsonObjectIsNull(currentAssignmentJson.get("subjectName")));
+        assignment.setStudentGroupName(checkJsonObjectIsNull(currentAssignmentJson.get("studentGroupName")));
+        assignment.setSubjectInstanceId(checkJsonObjectIsNull(currentAssignmentJson.get("subjectInstanceId")));
+        System.out.println("Assignment: " + assignment);
 
 
         // TODO: check-avaibility request-el megnézni, hogy elérhető-e a feladat, mielőtt lekérem, mert IDE Error Occured lesz és meghal a plugin | BiroUIMain-ben kell még !!!
         JsonObject exercisesOfTheAssignment = JsonParser.parseString(currentAssignment).getAsJsonObject();
         JsonArray exerciseStatuses = exercisesOfTheAssignment.get("exerciseStatuses").getAsJsonArray();
         System.out.println("Exercises of the assignment: " + exerciseStatuses);
+
+        for (JsonElement je : exerciseStatuses) {
+            JsonObject exerciseStatus = je.getAsJsonObject();
+            ExerciseStatus exerciseStatusObject = new ExerciseStatus();
+            exerciseStatusObject.setAssignedExerciseId(checkJsonObjectIsNullInt(exerciseStatus.get("assignedExerciseId")));
+            exerciseStatusObject.setExerciseIndex(checkJsonObjectIsNullInt(exerciseStatus.get("exerciseIndex")));
+            exerciseStatusObject.setExerciseState(checkJsonObjectIsNull(exerciseStatus.get("exerciseState")));
+            assignment.addExerciseStatus(exerciseStatusObject);
+        }
+        System.out.println("Exercise statuses: " + assignment.getExerciseStatuses());
+        System.out.println("Assignment: " + assignment);
 
         for (int i = 0; i < exerciseStatuses.size(); i++) {
             exercises.add(exerciseStatuses.get(i).getAsJsonObject());
@@ -78,7 +123,7 @@ public class AssignmentView {
         mainPanel = new JPanel(new BorderLayout());
         topPanel = new JPanel(new BorderLayout());
 
-        JsonObject assignmentJson = JsonParser.parseString(Assignment).getAsJsonObject();
+        JsonObject assignmentJson = JsonParser.parseString(AssignmentTextFromMainForm).getAsJsonObject();
         String assignmentName = assignmentJson.get("assignmentName").getAsString();
         String assignmentDescription = assignmentJson.get("assignmentDescription").getAsString();
         System.out.println("Assignment name: " + assignmentName);
@@ -168,6 +213,7 @@ public class AssignmentView {
             exerciseButton.setMinimumSize(new Dimension(50, 50));
             exerciseButton.setMaximumSize(new Dimension(50, 50));
             exerciseButton.setPreferredSize(new Dimension(50, 50));
+            exerciseButtons.add(exerciseButton);
             exercisePanel.add(exerciseButton);
         }
 
@@ -219,7 +265,7 @@ public class AssignmentView {
                     try {
                         UserServices.refreshToken(this.refreshToken);
                         this.accessToken = UserServices.getAccessToken();
-                        FileDownloader.downloadFile(downloadFileUrl/*, "C:\\Users\\Pali\\Downloads"*/, this.accessToken, assignmentName, currentExerciseId);
+                        FileService.downloadFile(downloadFileUrl/*, "C:\\Users\\Pali\\Downloads"*/, this.accessToken, assignmentName, currentExerciseId);
                         System.err.println("File downloaded: " + downloadFileUrl);
                     } catch (Exception exception) {
                         exception.printStackTrace();
@@ -228,14 +274,106 @@ public class AssignmentView {
             }
         });
         bottomPanel.add(testForDownload);
-        bottomPanel.setMinimumSize(new Dimension(Integer.MAX_VALUE, 200));
-        bottomPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, 200));
+        bottomPanel.setMinimumSize(new Dimension(Integer.MAX_VALUE, 100));
+        bottomPanel.setPreferredSize(new Dimension(Integer.MAX_VALUE, 100));
+
+        JButton uploadButton = new JButton("Fájl(ok) feltöltése");
+        uploadButton.addActionListener((ActionEvent e) -> {
+            System.out.println("Feltöltés gomb megnyomva");
+            // Elmenteni az összes változtatást, ha a user elfelejti és nincs autosave bekapcsolva
+            FileDocumentManager.getInstance().saveAllDocuments();
+            Project[] open = ProjectManager.getInstance().getOpenProjects();
+            if (open.length == 0) return;
+            Project project = open[0];
+            if (project == null) return;
+
+            FileUploadDialog fileUploadDialog = new FileUploadDialog(project);
+            if (fileUploadDialog.showAndGet()) {
+                // Get the selected files from the dialog, if OK button was pressed
+                List<VirtualFile> selectedFiles = fileUploadDialog.getSelectedFiles();
+                // Process the selected files (upload them)
+                System.out.println("Selected files: " + selectedFiles);
+                // Upload the files
+                if (selectedFiles.isEmpty()) return;
+
+                ApplicationManager.getApplication().executeOnPooledThread(() -> {
+                    try {
+                        // 3a) Feltöltés → submissionId
+                        int submissionId = uploadService.submitFiles(
+                                assignment.getExerciseStatuses().get(currentExerciseId).getAssignedExerciseId(), "", selectedFiles
+                        );
+
+                        // 3b) Polling 2s-kel
+                        UploadService.SubmissionStatus status =
+                                uploadService.waitUntilEvaluated(submissionId, 1_000);
+
+                        // 3c) Lekérjük a frissített assignmentet és exercise-t
+                        JsonObject updatedAssignment = uploadService.fetchAssignment(assignment.getAssignmentAssignedStudentId());
+                        JsonObject updatedExercise   = uploadService.fetchExercise(assignment.getExerciseStatuses().get(currentExerciseId).getAssignedExerciseId());
+                        System.out.println("Updated assignment: " + updatedAssignment);
+                        System.out.println("Updated exercise: " + updatedExercise);
+
+                        // 4) UI-frissítés EDT-n
+                        SwingUtilities.invokeLater(() -> {
+                            // például:
+                            int index = assignment.getExerciseStatuses().get(currentExerciseId).getExerciseIndex() - 1;
+                            updateAssignmentView(updatedAssignment, updatedExercise, index);
+                            displayExercise(index);
+                            Notifications.Bus.notify(
+                                    new Notification("Accepted language levels",
+                                            "Feltöltés kész",
+                                            "Állapot: " + (status.state.equals("EVALUATED") ? "Sikeres feltöltés" : "Valami még nem jó")
+                                                    + (status.score != null
+                                                    ? ", pontszám: " + status.score + "/" + status.maxScore
+                                                    : "")
+                                                    + (status.score != null
+                                                    ? ((status.score == status.maxScore)
+                                                    ? "\nGratulálok, szép munka!"
+                                                    : "")
+                                                    : ""),
+                                            NotificationType.INFORMATION),
+                                    project
+                            );
+                        });
+                    } catch (Exception ex) {
+                        // TODO: Megtudni milyen ERROR jön vissza, ha megoldás közben lejár az idő a beadásra és azt is lekezelni
+                        SwingUtilities.invokeLater(() ->
+                                Notifications.Bus.notify(
+                                        new Notification("Find Problems",
+                                                "Hiba a feltöltés során",
+                                                (ex.getMessage().contains("Sikertelen beadás: feltöltési limit elérve")
+                                                        ? "Sikertelen beadás: feltöltési limit elérve"
+                                                        : "Hiba a feltöltés során: " + ex.getMessage()),
+                                                NotificationType.ERROR),
+                                        project
+                                )
+                        );
+                    }
+                });
+            }
+        });
+
+        bottomPanel.add(uploadButton);
 
         mainPanel.add(topPanel, BorderLayout.NORTH);
         mainPanel.add(new JScrollPane(assignmentDescriptionPane), BorderLayout.CENTER);
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
 
+    }
+
+    private void updateAssignmentView(JsonObject updatedAssignment, JsonObject updatedExercise, int index) {
+        JsonArray statuses = updatedAssignment.getAsJsonArray("exerciseStatuses");
+        for (int i = 0; i < exerciseButtons.size(); i++) {
+            JsonObject statusObj = statuses.get(i).getAsJsonObject();
+            String newState = statusObj.get("exerciseState").getAsString();
+
+            JButton btn = exerciseButtons.get(i);
+            btn.setUI(new CustomButtonUI(newState));
+        }
+
+        exercisePanel.revalidate();
+        exercisePanel.repaint();
     }
 
     public JPanel getMainPanel() {
@@ -396,20 +534,49 @@ public class AssignmentView {
 
     private ArrayList<String> convert32bitImageTo24Bit(ArrayList<String> changedImgSrcLinks) {
         ArrayList<String> changedImgSrcLinksCopy = new ArrayList<>(changedImgSrcLinks);
+
+        // projekt gyökér és temp mappa előkészítése csak egyszer
+        Project[] open = ProjectManager.getInstance().getOpenProjects();
+        if (open.length == 0) return new ArrayList<>();
+        Project project = open[0];
+        String tempDir = project.getBasePath() + File.separator + "biro-temp";
+        File tempDirFile = new File(tempDir);
+        if (!tempDirFile.exists()) {
+            tempDirFile.mkdirs();
+        }
+
         for (int i = 0; i < changedImgSrcLinksCopy.size(); i++) {
-//            FileDownloader.downloadFile(imgSrcLink, "C:\\Users\\Pali\\Downloads");
-            String outputFilePath = "C:\\Users\\Pali\\Downloads\\biro-temp";
+            String imageUrl = changedImgSrcLinksCopy.get(i);
             try {
-                //PNGConverter.downloadAndConvertImage(changedImgSrcLinksCopy.get(i), outputFilePath);
-                System.out.println("Image downloaded and converted: " + changedImgSrcLinksCopy.get(i));
-                //changedImgSrcLinksCopy.set(i, "file:" + outputFilePath);
-                changedImgSrcLinksCopy.set(i, "file:" + PNGConverter.downloadAndConvertImage(changedImgSrcLinksCopy.get(i), outputFilePath));
-                System.out.println("Image path changed: " + changedImgSrcLinksCopy.get(i));
+                // letöltés + konvertálás, visszakapott teljes elérési út
+                String localPath = PNGConverter.downloadAndConvertImage(imageUrl, tempDir);
+
+                // VFS-frissítés és VirtualFile lekérése
+                File ioFile = new File(localPath);
+                VirtualFile vf = LocalFileSystem.getInstance()
+                        .refreshAndFindFileByIoFile(ioFile);
+                if (vf != null) {
+                    changedImgSrcLinksCopy.set(i, new File(localPath).toURI().toString().replace("file://", "file:"));//vf.getUrl().replace("file://", "file:"));   //vf IDE ERROR Occured lesz, ha indexing előtt bezárod a dialogot
+                } else {
+                    // ha nem találja, fallback a manuális file:// URL-re
+                    changedImgSrcLinksCopy.set(i, new File(localPath).toURI().toString().replace("file://", "file:"));
+                }
             } catch (Exception e) {
                 e.printStackTrace();
+                // hiba esetén az eredeti URL marad
             }
         }
+
         return changedImgSrcLinksCopy;
+    }
+
+
+    private String checkJsonObjectIsNull(JsonElement je) {
+        return (je != null && !je.isJsonNull()) ? je.getAsString() : "null";
+    }
+
+    private int checkJsonObjectIsNullInt(JsonElement je) {
+        return (je != null && !je.isJsonNull()) ? je.getAsInt() : 0;
     }
 
     private void showMainForm() {

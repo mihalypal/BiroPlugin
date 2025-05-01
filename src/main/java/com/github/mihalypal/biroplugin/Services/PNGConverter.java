@@ -1,6 +1,7 @@
 package com.github.mihalypal.biroplugin.Services;
 
 import javax.imageio.ImageIO;
+import javax.imageio.stream.ImageOutputStream;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -20,70 +21,73 @@ public class PNGConverter {
      * Letölt egy PNG képet URL-ről, konvertálja 24 bites formátumba és elmenti a megadott helyre.
      *
      * @param imageUrl       A kép URL-je.
-     * @param outputFilePath Az elmentett kép elérési útja.
+     * @param outputDirPath Az elmentett kép elérési útja.
      * @throws IOException Ha a letöltés vagy mentés közben hiba lép fel.
      */
-    public static String downloadAndConvertImage(String imageUrl, String outputFilePath) throws IOException {
-        //System.setProperty("javax.xml.parsers.SAXParserFactory", "org.apache.xerces.jaxp.SAXParserFactoryImpl");
-        BufferedImage originalImage = ImageIO.read(new URL(imageUrl));
-        String[] imageUrlParts = imageUrl.split("/");
-        String imageName = imageUrlParts[imageUrlParts.length - 1];
-        imageUrlParts = imageName.split("\\.");   // Kép kiterjesztésének leválasztása
-        outputFilePath = outputFilePath + "\\" + imageUrlParts[0] + ".jpg"; // Kép elérési útja és neve
+    public static String downloadAndConvertImage(String imageUrl, String outputDirPath) throws IOException {
+        // letöltjük a kép nevét URL-ből
+        String[] urlParts = new URL(imageUrl).getPath().split("/");
+        String fileName = urlParts[urlParts.length - 1];
+        String baseName = fileName.contains(".")
+                ? fileName.substring(0, fileName.lastIndexOf('.'))
+                : fileName;
 
-        //BufferedImage originalImage;
-        if (imageUrl.endsWith(".svg")) {
-            // Handle SVG conversion
-            try {
-                // SVG tartalom beolvasása stringként
-                InputStream urlStream = new URL(imageUrl).openStream();
-                String svgText = new String(urlStream.readAllBytes(), StandardCharsets.UTF_8);
-                urlStream.close();
+        // létrehozzuk a célkönyvtárat, ha még nincs
+        File outDir = new File(outputDirPath);
+        if (!outDir.exists() && !outDir.mkdirs()) {
+            throw new IOException("Nem sikerült létrehozni a könyvtárat: " + outputDirPath);
+        }
 
-                // "transparent" -> "none" csere || Erre azért van szükség, mert a validálásnál az SVG kódja hibás
-                svgText = svgText.replaceAll("(?i)fill\\s*=\\s*\"transparent\"", "fill=\"none\"");
+        // beállítjuk a teljes kimeneti fájlnevet .jpg-re
+        String outputFilePath = outputDirPath
+                + File.separator
+                + baseName
+                + ".jpg";
+        File outFile = new File(outputFilePath);
 
-                // Batik transzkódolás string inputból
-                TranscoderInput input = new TranscoderInput(new StringReader(svgText));
+        // beolvassuk az eredeti képet (PNG, JPG, stb.)
+        BufferedImage original = ImageIO.read(new URL(imageUrl));
+        if (imageUrl.toLowerCase().endsWith(".svg")) {
+            // SVG esetén Batik-kód
+            try (InputStream svgStream = new URL(imageUrl).openStream()) {
+                String svg = new String(svgStream.readAllBytes(), StandardCharsets.UTF_8)
+                        .replaceAll("(?i)fill\\s*=\\s*\"transparent\"", "fill=\"none\"");
+                TranscoderInput input = new TranscoderInput(new StringReader(svg));
                 BufferedImageTranscoder transcoder = new BufferedImageTranscoder();
                 transcoder.addTranscodingHint(KEY_BACKGROUND_COLOR, Color.WHITE);
                 transcoder.transcode(input, null);
-                originalImage = transcoder.getBufferedImage();
+                original = transcoder.getBufferedImage();
             } catch (Exception e) {
-                throw new IOException("Failed to process SVG image: " + imageUrl, e);
+                throw new IOException("SVG feldolgozása sikertelen: " + imageUrl, e);
             }
-        } else {
-            // Handle other image formats
-            originalImage = ImageIO.read(new URL(imageUrl));
         }
 
-        if (originalImage == null) {
-            throw new IOException("A kép nem tölthető be a megadott URL-ről: " + imageUrl);
+        if (original == null) {
+            throw new IOException("A kép nem tölthető be: " + imageUrl);
         }
 
-        // 24 bites RGB képre konvertálás (az átlátszóság eltávolítása)
-        BufferedImage convertedImage = new BufferedImage(
-                originalImage.getWidth(),
-                originalImage.getHeight(),
+        // átalakítás 24-bites RGB-re, fehér háttérrel
+        BufferedImage converted = new BufferedImage(
+                original.getWidth(),
+                original.getHeight(),
                 BufferedImage.TYPE_INT_RGB
         );
-
-        Graphics2D g = convertedImage.createGraphics();
-        g.setColor(Color.WHITE); // Fehér háttér, hogy az átlátszó részek ne legyenek feketék
-        g.fillRect(0, 0, convertedImage.getWidth(), convertedImage.getHeight());
-        g.drawImage(originalImage, 0, 0, null);
+        Graphics2D g = converted.createGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, converted.getWidth(), converted.getHeight());
+        g.drawImage(original, 0, 0, null);
         g.dispose();
 
-        // Kép mentése 24 bites JPG formátumban
-        boolean success = ImageIO.write(convertedImage, "jpg", new File(outputFilePath));
-        if (!success) {
-            throw new IOException("A kép mentése sikertelen: " + outputFilePath);
+        // JPG mentése
+        try (ImageOutputStream ios = ImageIO.createImageOutputStream(outFile)) {
+            if (!ImageIO.write(converted, "jpg", ios)) {
+                throw new IOException("A kép mentése sikertelen: " + outputFilePath);
+            }
         }
 
-        System.out.println("Kép sikeresen elmentve: " + outputFilePath);
-
-        return outputFilePath;
+        return outFile.getAbsolutePath();
     }
+
 
 //    public static void main(String[] args) {
 //        String imageUrl = "https://example.com/path/to/your/image.png";

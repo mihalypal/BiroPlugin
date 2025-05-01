@@ -5,8 +5,6 @@ import org.apache.batik.transcoder.TranscoderOutput;
 import java.awt.image.BufferedImage;
 
 import javax.xml.parsers.SAXParserFactory;
-import org.apache.batik.util.XMLResourceDescriptor;
-import org.apache.batik.transcoder.TranscoderInput;
 
 public class BufferedImageTranscoder extends ImageTranscoder {
     private BufferedImage bufferedImage;
