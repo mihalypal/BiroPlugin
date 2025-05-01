@@ -56,6 +56,9 @@ public class BiroUIMainForm {
         System.out.println("Subjects: " + jsonResponse.get("subjectName"));*/
         System.out.println("Subjects: " + subjectInstances.length);
         System.out.println("Subjects: " + subjectInstances[0]);
+
+        // TODO: do the check availability for the subjects and check their dates from-to
+
         for (String subjectInstance : subjectInstances) {
             JsonObject jsonResponse = JsonParser.parseString(subjectInstance).getAsJsonObject();
             //System.out.println("Subjects: " + jsonResponse.get("subjectName"));
