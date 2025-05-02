@@ -12,7 +12,7 @@
     <resource-bundle>messages.MyBundle</resource-bundle>
 
     <extensions defaultExtensionNs="com.intellij">
-        <toolWindow factoryClass="com.github.mihalypal.biroplugin.toolWindow.MyToolWindowFactory" id="Bíró" anchor="right" icon="AllIcons.Ide.Gift"/>
+        <toolWindow factoryClass="com.github.mihalypal.biroplugin.toolWindow.MyToolWindowFactory" id="Bíró" anchor="right" icon="/META-INF/pluginicon.svg"/> <!-- icon="AllIcons.Ide.Gift" -->
     </extensions>
 
     <applicationListeners>
