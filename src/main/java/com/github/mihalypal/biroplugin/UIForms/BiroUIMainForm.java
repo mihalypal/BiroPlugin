@@ -2,8 +2,12 @@ package com.github.mihalypal.biroplugin.UIForms;
 
 import com.github.mihalypal.biroplugin.Services.UserServices;
 import com.github.mihalypal.biroplugin.appearanceChanges.AssignmentCellRenderer;
+import com.github.mihalypal.biroplugin.config.PluginConstants;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationType;
+import com.intellij.notification.Notifications;
 
 import javax.swing.*;
 import java.time.LocalDateTime;
@@ -61,12 +65,16 @@ public class BiroUIMainForm {
 
         for (String subjectInstance : subjectInstances) {
             JsonObject jsonResponse = JsonParser.parseString(subjectInstance).getAsJsonObject();
-            //System.out.println("Subjects: " + jsonResponse.get("subjectName"));
-            String subjectName = jsonResponse.get("subjectName").getAsString();
-            String subjectInstanceId = jsonResponse.get("subjectInstanceId").getAsString();
-            //listModel.addElement(jsonResponse.get("subjectName").getAsString());
-            subjectNamesWithIds.add(subjectName + ";" + subjectInstanceId);
-            listModel.addElement(subjectName);
+            if (jsonResponse.get("semesterName").getAsString().equals(PluginConstants.SEMESTER_NAME)) {
+                //System.out.println("Subjects: " + jsonResponse.get("subjectName"));
+                String subjectName = jsonResponse.get("subjectName").getAsString();
+                String subjectInstanceId = jsonResponse.get("subjectInstanceId").getAsString();
+                //listModel.addElement(jsonResponse.get("subjectName").getAsString());
+                subjectNamesWithIds.add(subjectName + ";" + subjectInstanceId);
+                System.out.println("Subject: " + subjectName + " - " + subjectInstanceId);
+                listModel.addElement(subjectName);
+                System.out.println("Added Subject: " + subjectName + " - " + subjectInstanceId);
+            }
         }
         list1.setModel(listModel);
 
@@ -147,14 +155,28 @@ public class BiroUIMainForm {
 
         openAssignmentButton.addActionListener(e -> {
             //System.out.println("Selected: " + list2.getSelectedValue()); // test output
-            String selectedAssignment = allAssignmentsOfSelectedSubject.stream()
-                .filter(s -> s.contains(list2.getSelectedValue().split(";")[0]))
-                .findFirst()
-                .orElse("");
-            JsonObject selectedAssignmentJSON = JsonParser.parseString(selectedAssignment).getAsJsonObject();
-            System.out.println(selectedAssignmentJSON.get("assignmentName").getAsString() + " nevű feladat kezdése...");
-            //System.out.println("Selected assignment: " + selectedAssignment); test output
-            showAssignmentView(accessToken, refreshToken, selectedAssignment);
+            if (list2.getSelectedValue() != null) {
+                String selectedAssignment = allAssignmentsOfSelectedSubject.stream()
+                        .filter(s -> s.contains(list2.getSelectedValue().split(";")[0]))
+                        .findFirst()
+                        .orElse("");
+                JsonObject selectedAssignmentJSON = JsonParser.parseString(selectedAssignment).getAsJsonObject();
+                System.out.println(selectedAssignmentJSON.get("assignmentName").getAsString() + " nevű feladat kezdése...");
+                //System.out.println("Selected assignment: " + selectedAssignment); test output
+                showAssignmentView(accessToken, refreshToken, selectedAssignment);
+            } else {
+                SwingUtilities.invokeLater(() -> {
+                    Notifications.Bus.notify(
+                            new Notification(
+                                    "Attach to Process action",
+                                    "Nincs kiválasztott feladat!",
+                                    "Kérlek válassz ki egy feladatot a listából."
+                                            + "\nHa van elérhető feladat.",
+                                    NotificationType.INFORMATION
+                            )
+                    );
+                });
+            }
         });
     }
 

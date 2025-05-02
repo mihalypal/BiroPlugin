@@ -15,7 +15,8 @@ public class ReportDisplayDialog extends DialogWrapper {
         this.report = report;
         init();
         setTitle("Értékelési riport");
-        createCenterPanel();
+        setSize(600, 400);
+        //createCenterPanel();
     }
 
     @Override
