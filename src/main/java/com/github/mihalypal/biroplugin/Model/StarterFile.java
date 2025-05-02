@@ -18,6 +18,14 @@ public class StarterFile {
         this.exerciseId = exerciseId;
     }
 
+    public StarterFile(int id, String name, boolean viewable, boolean copyable, boolean downloadable) {
+        this.id = id;
+        this.name = name;
+        this.viewable = viewable;
+        this.copyable = copyable;
+        this.downloadable = downloadable;
+    }
+
     public int getId() {
         return id;
     }

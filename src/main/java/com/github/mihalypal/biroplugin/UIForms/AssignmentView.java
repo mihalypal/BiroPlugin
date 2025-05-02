@@ -1,13 +1,11 @@
 package com.github.mihalypal.biroplugin.UIForms;
 
 import com.github.mihalypal.biroplugin.Dialog.FileUploadDialog;
-import com.github.mihalypal.biroplugin.Model.Assignment;
-import com.github.mihalypal.biroplugin.Model.ExerciseStatus;
-import com.github.mihalypal.biroplugin.Model.StarterFile;
-import com.github.mihalypal.biroplugin.Services.FileService;
+import com.github.mihalypal.biroplugin.Dialog.ReportDisplayDialog;
+import com.github.mihalypal.biroplugin.Model.*;
+import com.github.mihalypal.biroplugin.Services.*;
 import com.github.mihalypal.biroplugin.appearanceChanges.CustomButtonUI;
 import com.github.mihalypal.biroplugin.appearanceChanges.CustomProgressBarUI;
-import com.github.mihalypal.biroplugin.Services.UploadService;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
@@ -15,10 +13,9 @@ import com.google.gson.JsonParser;
 //import com.vladsch.flexmark.util.data.MutableDataSet;
 //import com.vladsch.flexmark.parser.Parser;
 //import com.vladsch.flexmark.html.HtmlRenderer;
-import com.github.mihalypal.biroplugin.Services.UserServices;
-import com.github.mihalypal.biroplugin.Services.PNGConverter;
 
 import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationListener;
 import com.intellij.notification.NotificationType;
 import com.intellij.notification.Notifications;
 import com.intellij.openapi.application.ApplicationManager;
@@ -32,8 +29,10 @@ import org.commonmark.node.*;
 import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.commonmark.ext.gfm.tables.TablesExtension;
+import org.jetbrains.annotations.NotNull;
 
 import javax.swing.*;
+import javax.swing.event.HyperlinkEvent;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.io.File;
@@ -61,6 +60,7 @@ public class AssignmentView {
     private FileService fileDownloader;
     private final UploadService uploadService;
     private List<JButton> exerciseButtons;
+    private Exercise currentExercise;
 
     public AssignmentView(String accessToken, String refreshToken, String AssignmentTextFromMainForm) {
         this.accessToken = accessToken;
@@ -70,6 +70,7 @@ public class AssignmentView {
         this.starterFiles = new ArrayList<>();
         this.uploadService = new UploadService();
         this.exerciseButtons = new ArrayList<>();
+        this.currentExercise = new Exercise();
 
         // tokenek kiírása - tesztelésre
         System.out.println("Access token: " + accessToken);
@@ -303,7 +304,7 @@ public class AssignmentView {
                                 assignment.getExerciseStatuses().get(currentExerciseId).getAssignedExerciseId(), "", selectedFiles
                         );
 
-                        // 3b) Polling 2s-kel
+                        // 3b) Polling 1s-kel
                         UploadService.SubmissionStatus status =
                                 uploadService.waitUntilEvaluated(submissionId, 1_000);
 
@@ -312,6 +313,73 @@ public class AssignmentView {
                         JsonObject updatedExercise   = uploadService.fetchExercise(assignment.getExerciseStatuses().get(currentExerciseId).getAssignedExerciseId());
                         System.out.println("Updated assignment: " + updatedAssignment);
                         System.out.println("Updated exercise: " + updatedExercise);
+
+                        currentExercise.setAssignedExerciseId(checkJsonObjectIsNullInt(updatedExercise.get("assignedExerciseId")));
+                        currentExercise.setIndexInTaskList(checkJsonObjectIsNullInt(updatedExercise.get("indexInTaskList")));
+                        currentExercise.setType(checkJsonObjectIsNull(updatedExercise.get("type")));
+                        currentExercise.setName(checkJsonObjectIsNull(updatedExercise.get("name")));
+                        currentExercise.setDescription(checkJsonObjectIsNull(updatedExercise.get("description")));
+                        currentExercise.setDifficultyLevel(checkJsonObjectIsNullInt(updatedExercise.get("difficultyLevel")));
+                        currentExercise.setMaxScore(checkJsonObjectIsNullDouble(updatedExercise.get("maxScore")));
+                        currentExercise.setMinScore(checkJsonObjectIsNullDouble(updatedExercise.get("minScore")));
+                        currentExercise.setUploadLimit(checkJsonObjectIsNullInt(updatedExercise.get("uploadLimit")));
+                        currentExercise.setExpectedFileFormat(checkJsonObjectIsNull(updatedExercise.get("expectedFileFormat")));
+                        currentExercise.setTimeLimit(checkJsonObjectIsNullDouble(updatedExercise.get("timeLimit")));
+
+                        JsonArray starterFiles = updatedExercise.get("starterFiles").getAsJsonArray();
+
+                        for (JsonElement je : starterFiles) {
+                            StarterFile starterFile = new StarterFile(
+                                    je.getAsJsonObject().get("starterFileId").getAsInt(),
+                                    je.getAsJsonObject().get("filename").getAsString(),
+                                    je.getAsJsonObject().get("viewable").getAsBoolean(),
+                                    je.getAsJsonObject().get("copyable").getAsBoolean(),
+                                    je.getAsJsonObject().get("downloadable").getAsBoolean()
+                            );
+                            currentExercise.addStarterFile(starterFile);
+                        }
+
+                        currentExercise.setScore(checkJsonObjectIsNullDouble(updatedExercise.get("score")));
+
+                        JsonArray submissions = updatedExercise.get("submissions").getAsJsonArray();
+
+                        for (JsonElement je : submissions) {
+                            ArrayList<Evaluation> evaluations = new ArrayList<>();
+                            JsonArray evaluationArray = je.getAsJsonObject().get("evaluations").getAsJsonArray();
+                            for (JsonElement je2 : evaluationArray) {
+                                Evaluation evaluation = new Evaluation(
+                                        je2.getAsJsonObject().get("evaluationId").getAsInt(),
+                                        je2.getAsJsonObject().get("score").getAsDouble(),
+                                        je2.getAsJsonObject().get("message").getAsString(),
+                                        LocalDateTime.parse(je2.getAsJsonObject().get("evaluationTime").getAsString())
+                                );
+                                evaluations.add(evaluation);
+                            }
+
+                            Submission submission = new Submission(
+                                    je.getAsJsonObject().get("submissionId").getAsInt(),
+                                    je.getAsJsonObject().get("name").getAsString(),
+                                    je.getAsJsonObject().get("score").getAsDouble(),
+                                    je.getAsJsonObject().get("status").getAsString(),
+                                    LocalDateTime.parse(je.getAsJsonObject().get("submissionTime").getAsString()),
+                                    je.getAsJsonObject().get("ipAddress").getAsString(),
+                                    evaluations
+                            );
+                            currentExercise.addSubmission(submission);
+                        }
+
+                        System.err.println("Riport:");
+                        System.err.println(
+                            ReportService.fetchReport(
+                                currentExercise.getSubmissions()
+                                .get(currentExercise.getSubmissions().size() - 1)
+                                .getEvaluations()
+                                .get(currentExercise.getSubmissions()
+                                        .get(currentExercise.getSubmissions().size() - 1)
+                                        .getEvaluations()
+                                        .size() - 1)
+                                .getEvaluationId()
+                        ));
 
                         // 4) UI-frissítés EDT-n
                         SwingUtilities.invokeLater(() -> {
@@ -330,8 +398,34 @@ public class AssignmentView {
                                                     ? ((status.score == status.maxScore)
                                                     ? "\nGratulálok, szép munka!"
                                                     : "")
-                                                    : ""),
-                                            NotificationType.INFORMATION),
+                                                    : "")
+                                                    + "\n<a href=\"viewReport\">Riport megtekintése</a>",
+                                            NotificationType.INFORMATION,
+                                            new NotificationListener() {
+
+                                                @Override
+                                                public void hyperlinkUpdate(@NotNull Notification notification, @NotNull HyperlinkEvent hyperlinkEvent) {
+                                                    if ("viewReport".equals(hyperlinkEvent.getDescription())) {
+                                                        String reportText;
+                                                        try {
+                                                            reportText = ReportService.fetchReport(
+                                                                    currentExercise.getSubmissions()
+                                                                            .get(currentExercise.getSubmissions().size() - 1)
+                                                                            .getEvaluations()
+                                                                            .get(currentExercise.getSubmissions()
+                                                                                    .get(currentExercise.getSubmissions().size() - 1)
+                                                                                    .getEvaluations()
+                                                                                    .size() - 1)
+                                                                            .getEvaluationId()
+                                                            );
+                                                        } catch (Exception ex) {
+                                                            reportText = "Riport nem érhető el.";
+                                                        }
+                                                        ReportDisplayDialog dlg = new ReportDisplayDialog(project, reportText);
+                                                        dlg.show();
+                                                    }
+                                                }
+                                            }),
                                     project
                             );
                         });
@@ -577,6 +671,10 @@ public class AssignmentView {
 
     private int checkJsonObjectIsNullInt(JsonElement je) {
         return (je != null && !je.isJsonNull()) ? je.getAsInt() : 0;
+    }
+
+    private double checkJsonObjectIsNullDouble(JsonElement je) {
+        return (je != null && !je.isJsonNull()) ? je.getAsDouble() : 0.0;
     }
 
     private void showMainForm() {
