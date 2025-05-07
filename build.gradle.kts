@@ -52,7 +52,7 @@ dependencies {
     implementation("com.google.code.gson:gson:2.13.0")
     implementation("org.commonmark:commonmark:0.18.2")
     implementation("org.commonmark:commonmark-ext-gfm-tables:0.18.2")
-    implementation("org.apache.xmlgraphics:batik-transcoder:1.17") {
+    implementation("org.apache.xmlgraphics:batik-transcoder:1.19") {
         exclude(group = "xerces", module = "xercesImpl")
     }
     implementation("org.apache.xmlgraphics:batik-codec:1.16")
