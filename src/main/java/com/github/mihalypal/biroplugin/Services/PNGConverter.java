@@ -39,14 +39,24 @@ public class PNGConverter {
         }
 
         // beállítjuk a teljes kimeneti fájlnevet .jpg-re
-        String outputFilePath = outputDirPath
+        /*String outputFilePath = outputDirPath
                 + File.separator
                 + baseName
-                + ".jpg";
+                + ".jpg";*/
+        String outputFilePath = outputDirPath + File.separator + fileName;
         File outFile = new File(outputFilePath);
 
+        // gif-ek
+        if (imageUrl.toLowerCase().endsWith(".gif")) {
+            // Save the .gif file directly
+            try (InputStream inputStream = new URL(imageUrl).openStream()) {
+                java.nio.file.Files.copy(inputStream, outFile.toPath(), java.nio.file.StandardCopyOption.REPLACE_EXISTING);
+            }
+            return outFile.getAbsolutePath();
+        }
+
         // beolvassuk az eredeti képet (PNG, JPG, stb.)
-        BufferedImage original = ImageIO.read(new URL(imageUrl));
+        BufferedImage original = null;
         if (imageUrl.toLowerCase().endsWith(".svg")) {
             // SVG esetén Batik-kód
             try (InputStream svgStream = new URL(imageUrl).openStream()) {
@@ -60,6 +70,8 @@ public class PNGConverter {
             } catch (Exception e) {
                 throw new IOException("SVG feldolgozása sikertelen: " + imageUrl, e);
             }
+        } else {
+            original = ImageIO.read(new URL(imageUrl));
         }
 
         if (original == null) {
