@@ -4,4 +4,4 @@
 .qodana
 build
 .kotlin
-**config.properties
+src/main/resources/config.properties
