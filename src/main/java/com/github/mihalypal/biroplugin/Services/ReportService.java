@@ -20,6 +20,7 @@ public class ReportService {
         StringBuilder report = new StringBuilder();
 
         try {
+            UserServices.refreshToken(UserServices.getRefreshToken());
             URL apiUrl = new URL(url);
             HttpURLConnection conn = (HttpURLConnection) apiUrl.openConnection();
             conn.setRequestMethod("GET");
@@ -54,6 +55,10 @@ public class ReportService {
         }
 
         return null;
+    }
+
+    public static String fetchSolution(int submissionID) {
+        return "Ez a funkció még nincs implementálva!";
     }
 
 }

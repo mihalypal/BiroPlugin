@@ -13,6 +13,9 @@ import java.nio.charset.StandardCharsets;
 public class UserServices {
     private static String accessToken;
     private static String refreshToken;
+    private static String h_identifier;
+    public static boolean LogSendingAccepted = false;
+    public static boolean LogSendingWithIdentifier = false;
 
     /*private static String authToken;
 
@@ -104,6 +107,30 @@ public class UserServices {
 
     public static void setRefreshToken(String refreshToken) {
         UserServices.refreshToken = refreshToken;
+    }
+
+    public static String getHIdentifier() {
+        return h_identifier;
+    }
+
+    public static void setHIdentifier(String h_identifier) {
+        UserServices.h_identifier = h_identifier;
+    }
+
+    public static boolean isLogSendingAccepted() {
+        return LogSendingAccepted;
+    }
+
+    public static void setLogSendingAccepted(boolean logSendingAccepted) {
+        LogSendingAccepted = logSendingAccepted;
+    }
+
+    public static boolean isLogSendingWithIdentifier() {
+        return LogSendingWithIdentifier;
+    }
+
+    public static void setLogSendingWithIdentifier(boolean logSendingWithIdentifier) {
+        LogSendingWithIdentifier = logSendingWithIdentifier;
     }
 
     // HTTP request to get the access token

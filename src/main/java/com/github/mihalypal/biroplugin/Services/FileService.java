@@ -144,9 +144,10 @@ public class FileService {
      *
      * @param fileURL     A fájl URL-je.
      * @param accessToken Az API hozzáférési token.
+     * @return
      * @throws IOException Ha a letöltés vagy mentés közben hiba lép fel.
      */
-    public static void downloadFile(String fileURL, String accessToken, String assignmentName, int exerciseIndex) throws IOException {
+    public static String downloadFile(String fileURL, String accessToken, String assignmentName, int exerciseIndex) throws IOException {
         /* // ez a modul generálós kód megoldása, viszont ez még nem működik megfelelően teljesen, marad kommentben, később ebből ki lehet indulni
         Project project = ProjectManager.getInstance().getOpenProjects()[0]; // az első megnyitott projekt
         if (project == null || project.getBasePath() == null) {
@@ -209,18 +210,18 @@ public class FileService {
         // Package-be rendezős megoldás
         // Lekérjük az aktuális projektet
         Project[] open = ProjectManager.getInstance().getOpenProjects();
-        if (open.length == 0) return;
+        if (open.length == 0) return fileURL;
         Project project = open[0];
         if (project == null) {
             System.out.println("No open project found.");
-            return;
+            return fileURL;
         }
 
         // A projekt gyökérmappájának lekérése
         String projectBasePath = project.getBasePath();
         if (projectBasePath == null) {
             System.out.println("Project base path not found.");
-            return;
+            return fileURL;
         }
 
         // feladatsor és feladat mappák nevének generálása
@@ -234,21 +235,21 @@ public class FileService {
         File targetDir = new File(projectBasePath + File.separator + "src", assignmentFolder + File.separator + exerciseFolder);
         if (!targetDir.exists() && !targetDir.mkdirs()) {
             System.err.println("Nem sikerült létrehozni a mappát: " + targetDir.getAbsolutePath());
-            return;
+            return fileURL;
         }
 
         // Fájl lekérése
         String jsonResponse = fetchFileData(fileURL, accessToken);
         if (jsonResponse == null) {
             System.out.println("Failed to fetch file.");
-            return;
+            return fileURL;
         }
 
         String fileName = extractJsonValue(jsonResponse, "filename");
         String fileContentBase64 = extractJsonValue(jsonResponse, "content");
         if (fileName == null || fileContentBase64 == null) {
             System.out.println("Invalid JSON data.");
-            return;
+            return fileURL;
         }
 
         // Fájlnév ellenőrzés, egyediség
@@ -297,6 +298,7 @@ public class FileService {
         }
 
         System.out.println("File saved: " + outputFile.getAbsolutePath());
+        return outputFile.getAbsolutePath();
 /*
         // A `src` mappa elérési útja
         File srcDir = new File(projectBasePath, "src");
@@ -410,7 +412,7 @@ public class FileService {
      * @param name A fájl neve.
      * @return A normalizált fájlnév.
      */
-    private static String normalizeName(String name) {
+    public static String normalizeName(String name) {
         String base = name.toLowerCase()
                 .replace(".", "")     // pont eltávolítása
                 .replace(" ", "_")

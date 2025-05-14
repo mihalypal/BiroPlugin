@@ -73,4 +73,16 @@ public class StarterFile {
     public void setExerciseId(int exerciseId) {
         this.exerciseId = exerciseId;
     }
+
+    @Override
+    public String toString() {
+        return "StarterFile{" +
+                "id=" + id +
+                ", name='" + name + '\'' +
+                ", viewable=" + viewable +
+                ", copyable=" + copyable +
+                ", downloadable=" + downloadable +
+                ", exerciseId=" + exerciseId +
+                '}';
+    }
 }

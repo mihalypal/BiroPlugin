@@ -1,5 +1,8 @@
 package com.github.mihalypal.biroplugin.UIForms;
 
+import com.github.mihalypal.biroplugin.Dialog.AskForLogSendingDialog;
+import com.github.mihalypal.biroplugin.Services.LogSenderService;
+import com.github.mihalypal.biroplugin.Services.UserServices;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
@@ -60,14 +63,20 @@ public class BiroUILoginForm {
             if (username.isEmpty() || password.isEmpty()) {
                 JOptionPane.showMessageDialog(null, "Add meg a h-s azonosítód és a jelszavad!", "Hiba", JOptionPane.ERROR_MESSAGE);
             } else {
-                if (username.length() == 7) {
+                //if (username.length() == 7) {
                     boolean authenticated = authenticateUser(username, password);
                     if (authenticated) {
+                        UserServices.setHIdentifier(username);
+                        if (UserServices.isLogSendingAccepted()) {
+                            LogSenderService.sendStatistic("Bejelentkezett egy felhasználó.");
+                        }
                         if (rememberMeCheckBox.isSelected()) {
                             saveCredentials(username, password);
                             // TODO: elmenteni a refresh-tokent is az auto login miatt, Ha még él a token
                         }
-                        JOptionPane.showMessageDialog(null, "Sikeres bejelentkezés", "Bejelentkezés", JOptionPane.INFORMATION_MESSAGE);
+                        //JOptionPane.showMessageDialog(null, "Sikeres bejelentkezés", "Bejelentkezés", JOptionPane.INFORMATION_MESSAGE);
+                        AskForLogSendingDialog.showDialog(null);
+
                         /*System.out.println("GET /students/subject-instances: " + callGetApi("https://biro3.inf.u-szeged.hu/api/v1/students/subject-instances"));
 
                         System.out.println("GET /students/subject-instances/1: " + callGetApi("https://biro3.inf.u-szeged.hu/api/v1/students/subject-instances/1"));
@@ -96,9 +105,9 @@ public class BiroUILoginForm {
                     }
                     else
                         JOptionPane.showMessageDialog(null, "Hibás h-s azonosító vagy jelszó", "Hiba", JOptionPane.ERROR_MESSAGE);
-                } else {
-                    JOptionPane.showMessageDialog(null, "Hibás h-s azonosító", "Hiba", JOptionPane.ERROR_MESSAGE);
-                }
+                //} else {
+                //    JOptionPane.showMessageDialog(null, "Hibás h-s azonosító", "Hiba", JOptionPane.ERROR_MESSAGE);
+                //}
             }
 
 

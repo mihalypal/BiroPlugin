@@ -48,4 +48,14 @@ public class Evaluation {
     public void setEvaluationTime(LocalDateTime evaluationTime) {
         this.evaluationTime = evaluationTime;
     }
+
+    @Override
+    public String toString() {
+        return "Evaluation{" +
+                "evaluationId=" + evaluationId +
+                ", score=" + score +
+                ", message='" + message + '\'' +
+                ", evaluationTime=" + evaluationTime +
+                '}';
+    }
 }

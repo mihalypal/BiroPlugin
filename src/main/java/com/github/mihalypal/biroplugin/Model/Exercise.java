@@ -163,4 +163,24 @@ public class Exercise {
         }
         submissions.add(submission);
     }
+
+    @Override
+    public String toString() {
+        return "Exercise{" +
+                "assignedExerciseId=" + assignedExerciseId +
+                ", indexInTaskList=" + indexInTaskList +
+                ", type='" + type + '\'' +
+                ", name='" + name + '\'' +
+                ", description='" + description + '\'' +
+                ", difficultyLevel=" + difficultyLevel +
+                ", maxScore=" + maxScore +
+                ", minScore=" + minScore +
+                ", uploadLimit=" + uploadLimit +
+                ", expectedFileFormat='" + expectedFileFormat + '\'' +
+                ", timeLimit=" + timeLimit +
+                ", starterFiles=" + starterFiles +
+                ", score=" + score +
+                ", submissions=" + submissions +
+                '}';
+    }
 }

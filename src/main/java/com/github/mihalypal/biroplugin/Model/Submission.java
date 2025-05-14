@@ -79,4 +79,17 @@ public class Submission {
     public void setEvaluations(ArrayList<Evaluation> evaluations) {
         this.evaluations = evaluations;
     }
+
+    @Override
+    public String toString() {
+        return "Submission{" +
+                "submissionId=" + submissionId +
+                ", name='" + name + '\'' +
+                ", score=" + score +
+                ", status='" + status + '\'' +
+                ", submissionTime=" + submissionTime +
+                ", ipAddress='" + ipAddress + '\'' +
+                ", evaluations=" + evaluations +
+                '}';
+    }
 }
