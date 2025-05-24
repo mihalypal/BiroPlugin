@@ -244,6 +244,19 @@ public class AssignmentView {
         testForDownload.addActionListener(e -> {
             System.out.println("Letöltés gomb megnyomva");
             String assignedExerciseId = "";
+
+            if (this.starterFiles.isEmpty()) {
+                Notifications.Bus.notify(
+                        NotificationGroupManager.getInstance()
+                                .getNotificationGroup("Attach to Process action")
+                                .createNotification(
+                                        "Nincs kiinduló fájl",
+                                        "Nincs elérhető fájl a kiválasztott feladathoz.<br>Hozd létre a megoldáshoz a fájlokat!",
+                                        NotificationType.INFORMATION
+                                )
+                );
+            }
+
 //            try {
 //                assignedExerciseId = exercises.get(0).get("assignedExerciseId").getAsString();
 //            } catch (Exception exception) {
@@ -252,6 +265,14 @@ public class AssignmentView {
 //            JsonArray starterFiles = exercisesOfTheAssignment.get("starterFiles").getAsJsonArray();
 //            System.out.println("Starter files: " + starterFiles);
             String downloadFileUrl = "https://biro3.inf.u-szeged.hu/api/v1/students/exercises/206370/starterfiles/555";
+            Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
+            if (openProjects.length > 0) {
+                Project project = openProjects[0];
+                FileEditorManager fileEditorManager = FileEditorManager.getInstance(project);
+                for (VirtualFile ovf : fileEditorManager.getOpenFiles()) {
+                    fileEditorManager.closeFile(ovf);
+                }
+            }
             for (StarterFile starterFile : this.starterFiles) {
                 System.err.println("Starter file: " + starterFile.getName());
                 try {
@@ -271,7 +292,7 @@ public class AssignmentView {
                         SwingUtilities.invokeLater(() -> {
                             VirtualFile file = LocalFileSystem.getInstance().refreshAndFindFileByPath(downloadedFilePath);
                             if (file != null) {
-                                Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
+                                //Project[] openProjects = ProjectManager.getInstance().getOpenProjects();
                                 if (openProjects.length > 0) {
                                     FileEditorManager.getInstance(openProjects[0]).openFile(file, true);
                                 }
@@ -319,6 +340,15 @@ public class AssignmentView {
 
                 ApplicationManager.getApplication().executeOnPooledThread(() -> {
                     try {
+                        Notifications.Bus.notify(
+                                NotificationGroupManager.getInstance()
+                                        .getNotificationGroup("Attach to Process action")
+                                        .createNotification(
+                                                "Kiértékelés alatt",
+                                                "A beadott fájl értékelése folyamatban...",
+                                                NotificationType.INFORMATION
+                                        )
+                        );
                         // 3a) Feltöltés → submissionId
                         int submissionId = uploadService.submitFiles(
                                 currentAssignment.getExerciseStatuses().get(currentExerciseId).getAssignedExerciseId(), "", selectedFiles
@@ -344,7 +374,7 @@ public class AssignmentView {
                             displayExercise(index);
                             Notifications.Bus.notify(
                                     NotificationGroupManager.getInstance()
-                                            .getNotificationGroup("Accepted language levels")
+                                            .getNotificationGroup("Attach to Process action")
                                             .createNotification(
                                                     "Feltöltés kész",
                                                     "<html>Állapot: " + (status.state.equals("EVALUATED") ? "Sikeres feltöltés" : "Valami még nem jó")

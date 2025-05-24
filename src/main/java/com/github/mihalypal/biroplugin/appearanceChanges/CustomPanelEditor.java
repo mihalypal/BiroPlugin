@@ -34,7 +34,7 @@ public class CustomPanelEditor extends AbstractCellEditor implements TableCellEd
 
         eyeBtn.addActionListener(e -> {
             String sol = ReportService.fetchSolution(current.getSubmissionId());
-            new ReportDisplayDialog(project, sol, exercise.getName(), current.getName(), "Feltöltött Megoldás").show();
+            new ReportDisplayDialog(project, sol, exercise.getName(), current.getName(), "Feltöltött Megoldás").show(); // TODO: jelezni a dialognak ha több fájl van
             if (UserServices.isLogSendingAccepted()) {
                 if (sol != null && !sol.isEmpty()) {
                     LogSenderService.sendStatistic("Megoldás megtekintve: " + current.getName() + " / " + exercise.getSubmissions().size());

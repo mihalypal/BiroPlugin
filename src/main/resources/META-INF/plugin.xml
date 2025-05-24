@@ -4,6 +4,16 @@
     <name>Bíró 3 Extension</name>
     <version>1.0</version>
     <vendor>mihalypal</vendor>
+    <description>Ez itt a BíróPlugin leírása, amelynek meg kell haladnia a legalább 40 karaktert.</description>
+    <!--<supported-products>
+        <product id="IC" since-build="233" until-build="251.*"/>
+        <product id="IU" since-build="233" until-build="251.*"/>
+        <product id="PC" since-build="233" until-build="251.*"/>
+        <product id="PY" since-build="233" until-build="251.*"/>
+        <product id="CL" since-build="233" until-build="251.*"/>
+        <product id="WS" since-build="233" until-build="251.*"/>
+        <product id="PS" since-build="233" until-build="251.*"/>
+    </supported-products>-->
 
     <depends>com.intellij.modules.platform</depends>
     <depends>com.intellij.modules.java</depends>
@@ -13,9 +23,14 @@
 
     <extensions defaultExtensionNs="com.intellij">
         <toolWindow factoryClass="com.github.mihalypal.biroplugin.toolWindow.MyToolWindowFactory" id="Bíró" anchor="right" icon="/META-INF/pluginicon.svg"/> <!-- icon="AllIcons.Ide.Gift" -->
+
+        <toolWindow id="Riportok"
+                    factoryClass="com.github.mihalypal.biroplugin.toolWindow.ReportsToolWindowFactory"
+                    anchor="bottom"
+                    icon="/META-INF/pluginicon.svg"/>
     </extensions>
 
-    <applicationListeners>
+    <!--<applicationListeners>
         <listener class="com.github.mihalypal.biroplugin.listeners.MyApplicationActivationListener" topic="com.intellij.openapi.application.ApplicationActivationListener"/>
-    </applicationListeners>
+    </applicationListeners>-->
 </idea-plugin>

@@ -19,14 +19,30 @@
 <!-- Plugin description -->
 Ez a plugin lehetővé teszi a Biro 3 rendszer használatát az IntelliJ IDEA-ban.
 
-Lehetőséget biztosít a Biro 3 rendszerbe való bejelentkezésre, a kurzusok és számonkérések megtekintésére.
-És azok feladatsorainak megnyitására, beadására is.
+## Használat
 
-This Fancy IntelliJ Platform Plugin is going to be your implementation of the brilliant ideas that you have.
+- Jelentkezz be a h-s azonosítóddal és jelszavaddal
+- Add meg, hogy szeretnél-e LOG-okat küldeni a fejlesztőnek, illetve, hogy ehhez szeretnéd-e, hogy beazonosítható legyél
+- Válaszd ki a tárgyat, amin dolgozni szeretnél
+- Válaszd ki a feladatsort, amit meg szeretnél oldani
 
-This specific section is a source for the [plugin.xml](/src/main/resources/META-INF/plugin.xml) file which will be extracted by the [Gradle](/build.gradle.kts) during the build process.
 
-To keep everything working, do not remove `<!-- ... -->` sections. 
+- A felület, ami ezután megjelenik, talán már ismerős lehet, ha használtad a Bíró3 webes felületét korábban.
+- A feladatsoron belüli egyes feladatokat az azokhoz tartozó gombokkal tudod megnyitni.
+- Amennyiben vannak biztosított fájlok, azok letöltésére is van lehetőséged, a ```Biztoított fájl(ok) letöltése``` gomb megnyomásával. Melyet a panel alján találsz.
+- A feladatok megoldása utána a ```Fájl(ok) feltöltése``` gomb megnyomásával felugrik egy fájlválasztó ablak, ahol kiválaszthatod a megoldásaidat. (Itt a package-ek lesznek listázva, ha abban dolgoztál, ha simán az ```src``` mappába dolgozol, akkor a ```<default>``` package alatt keresd a megoldásodat)
+- Ha kiválasztottad a fájl(oka)t, akkor az ```OK``` gomb megnyomásával a plugin feltölti a fájlokat a Bíró3 rendszerébe.
+- Ezután, ha megtörtént a kiértékelés, akkor egy értesítést kapsz a kiértékelés eredményéről, ahonnan rögtön megnyitható az aktuális riport. Egyéb esetben a ```Riportok megtekintése``` gombra kattintva érheted el a riportokat.
+
+
+## Fejlesztés segítése
+
+Tudod segíteni a fejlesztési folyamatot azzal, hogy a tárgy/feladatsor választása panelen fent található ```Visszajelzés küldése a pluginról``` gombra kattintva megosztod a tapasztalataidat, javaslataidat a plugin fejlesztőjével. \
+Az esetleges hibákat is itt tudod jelezni, amennyiben a plugin nem működik megfelelően. \
+Többféle visszajelzés kategória közül van lehetőség választani, így a visszajelzésedet a legjobban illeszkedő kategóriába tudod tenni.
+
+__Fontos:__ A visszajelzések alapvetően *anonim* módon történnek, azonban ha szeretnéd, hogy beazonosítható legyen a visszajelzésed, akkor erre is van lehetőség a megfelelő checkbox kipipálásával.
+
 <!-- Plugin description end -->
 
 ## Installation

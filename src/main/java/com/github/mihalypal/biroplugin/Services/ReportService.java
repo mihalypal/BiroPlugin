@@ -58,7 +58,52 @@ public class ReportService {
     }
 
     public static String fetchSolution(int submissionID) {
-        return "Ez a funkció még nincs implementálva!";
+
+        // TODO: kezelni, hogy nem ismert a fájl neve, mint a riportnál
+        // TODO: több fájl is lehet, ezeket JsonArray-ben lehet tárolni, így itt az kell visszaadni
+        // TODO: ReportDisplayDialog-ban lekezelni és megjeleníteni, vagy saját Dialog-ot írni erre.
+
+        return "Ez a funkció még nincs implementálva.";
+
+        /*String url = PluginConstants.BASE_URL + "/api/v1/students/submissions/" + submissionID + "/uploaded-files";
+        StringBuilder solution = new StringBuilder();
+
+        try {
+            UserServices.refreshToken(UserServices.getRefreshToken());
+            URL apiUrl = new URL(url);
+            HttpURLConnection conn = (HttpURLConnection) apiUrl.openConnection();
+            conn.setRequestMethod("GET");
+            conn.setRequestProperty("Accept", "application/json");
+            conn.setRequestProperty("Authorization", "Bearer " + UserServices.getAccessToken());
+
+            int responseCode = conn.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                try (BufferedReader br = new BufferedReader(new InputStreamReader(conn.getInputStream()))) {
+                    String line;
+                    while ((line = br.readLine()) != null) {
+                        solution.append(line);
+                    }
+                }
+                // debug lines
+                System.out.println("Response Code: " + responseCode);
+                System.out.println("Raw Response: " + solution.toString());
+
+                // Parse the report string to extract the report content
+                JsonArray jsonArray = JsonParser.parseString(solution.toString()).getAsJsonArray();
+                for (int i = 0; i < jsonArray.size(); i++) {
+                    JsonObject jsonObject = jsonArray.get(i).getAsJsonObject();
+                    if ("riport.txt".equals(jsonObject.get("filename").getAsString())) {
+                        String Base64Content = jsonObject.get("content").getAsString();
+                        byte[] decodedBytes = Base64.getDecoder().decode(Base64Content);
+                        return new String(decodedBytes);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to fetch report", e);
+        }
+
+        return null;*/
     }
 
 }
