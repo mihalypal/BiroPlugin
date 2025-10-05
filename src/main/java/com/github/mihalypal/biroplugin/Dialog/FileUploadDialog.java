@@ -121,7 +121,7 @@ public class FileUploadDialog extends DialogWrapper {
     private final CheckboxTree tree;
     private final CheckedTreeNode rootNode;
 
-    public FileUploadDialog(@NotNull Project project) {
+    public FileUploadDialog(@NotNull Project project, String packageName) {
         super(project);
         this.project = project;
         setTitle("Fájlok Kiválasztása Feltöltésre");
@@ -171,7 +171,21 @@ public class FileUploadDialog extends DialogWrapper {
             ((CheckedTreeNode) it.nextElement()).setChecked(false);
         }
 
+        checkPackageNode(packageName);
+
         init();            // DialogWrapper init
+    }
+
+    // pipálja az aktuális package-et
+    public void checkPackageNode(String packageName) {
+        for (Enumeration<TreeNode> it = rootNode.breadthFirstEnumeration(); it.hasMoreElements(); ) {
+            CheckedTreeNode node = (CheckedTreeNode) it.nextElement();
+            Object userObject = node.getUserObject();
+            if (userObject instanceof String && userObject.equals(packageName)) {
+                node.setChecked(true);
+                break; // Stop after finding the matching package
+            }
+        }
     }
 
     /** Visszaadja a package→fájlok map-et */

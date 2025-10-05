@@ -1,11 +1,26 @@
 package com.github.mihalypal.biroplugin.UIForms;
 
+import com.github.mihalypal.biroplugin.Dialog.DiscordFeedbackSenderDialog;
+import com.github.mihalypal.biroplugin.Services.DiscordWebhook;
 import com.github.mihalypal.biroplugin.Services.UserServices;
 import com.github.mihalypal.biroplugin.appearanceChanges.AssignmentCellRenderer;
+import com.github.mihalypal.biroplugin.appearanceChanges.CustomButtonUI;
+import com.github.mihalypal.biroplugin.config.PluginConstants;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
+import com.intellij.notification.Notification;
+import com.intellij.notification.NotificationType;
+import com.intellij.notification.Notifications;
+import com.intellij.openapi.application.ApplicationManager;
+import com.intellij.openapi.project.Project;
+import com.intellij.openapi.project.ProjectManager;
 
 import javax.swing.*;
+import java.awt.*;
+import java.io.IOException;
+import java.net.UnknownHostException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 
@@ -27,21 +42,83 @@ public class BiroUIMainForm {
 
         //System.out.println("Access token: " + accessToken);
         //System.out.println("Refresh token: " + refreshToken);
+        tokenRefreshTest.setUI(new CustomButtonUI(""));
+        tokenRefreshTest.setMinimumSize(new Dimension(0, 50));
+        tokenRefreshTest.setMaximumSize(new Dimension(0, 50));
+        tokenRefreshTest.setPreferredSize(new Dimension(0, 50));
+
+        openAssignmentButton.setUI(new CustomButtonUI(""));
+        openAssignmentButton.setMinimumSize(new Dimension(0, 50));
+        openAssignmentButton.setMaximumSize(new Dimension(0, 50));
+        openAssignmentButton.setPreferredSize(new Dimension(0, 50));
 
         tokenRefreshTest.addActionListener(e -> {
             //System.out.println("Access token: " + accessToken);
             //System.out.println("Refresh token: " + refreshToken);
-            System.out.println("Access token: " + UserServices.getAccessToken());
+            /*System.out.println("Access token: " + UserServices.getAccessToken());
             System.out.println("Refresh token: " + UserServices.getRefreshToken());
             UserServices.refreshToken(refreshToken);
             System.out.println("Access token: " + UserServices.getAccessToken());
-            System.out.println("Refresh token: " + UserServices.getRefreshToken());
+            System.out.println("Refresh token: " + UserServices.getRefreshToken());*/
+            // project
+            Project[] open = ProjectManager.getInstance().getOpenProjects();
+            if (open.length == 0) return;
+            Project project = open[0];
+            if (project == null) {
+                System.out.println("No open project found.");
+                return;
+            }
+            DiscordFeedbackSenderDialog dialog = new DiscordFeedbackSenderDialog(project);
+            boolean ok = dialog.showAndGet();
+            if (ok) {
+                System.out.println("Visszajelzés elküldve.");
+            } else {
+                System.out.println("Visszajelzés elküldés megszakítva.");
+            }
+            /*DiscordWebhook webhook = new DiscordWebhook(PluginConstants.DISCORD_WEBHOOK_URL);
+            webhook.setContent("Ez egy sima üzenet");
+            webhook.setAvatarUrl("https://www.inf.u-szeged.hu/~gmark/biro/prog1/gyak11_to/img01.gif");
+            webhook.setUsername("Feedback Sender");
+            webhook.setTts(true);
+            webhook.addEmbed(new DiscordWebhook.EmbedObject()
+                    .setTitle("Beágyazott üzenet címe")
+                    .setDescription("Ez meg itt a leírása")
+                    .setColor(Color.GREEN)
+                    .addField("Első Mező", "valami tartalom", true)
+                    .addField("Második Mező", "random feljegyzés", true)
+                    .addField("Harmadik Mező", "Ez már nem inline, szóval új sorban van", false)
+                    .setThumbnail("https://kryptongta.com/images/kryptonlogo.png")
+                    .setFooter("Footer text", "https://kryptongta.com/images/kryptonlogodark.png")
+                    .setImage("https://kryptongta.com/images/kryptontitle2.png")
+                    .setAuthor("Author Name", "https://kryptongta.com", "https://kryptongta.com/images/kryptonlogowide.png")
+                    .setUrl("https://www.google.com"));
+            webhook.addEmbed(new DiscordWebhook.EmbedObject()
+                    .setDescription("Ez egy másik beágyazott szekció az üzenetben")
+                    .setColor(Color.YELLOW));
+            try {
+                webhook.execute();
+            } catch (UnknownHostException ex) {
+                ApplicationManager.getApplication().executeOnPooledThread(() -> {
+                    SwingUtilities.invokeLater(() -> {
+                        Notifications.Bus.notify(
+                                new Notification(
+                                        "Attach to Process action",
+                                        "Nincs internet kapcsolat!",
+                                        "Kérlek ellenőrizd az internet kapcsolatodat.",
+                                        NotificationType.INFORMATION
+                                )
+                        );
+                    });
+                });
+            } catch (IOException ex) {
+                throw new RuntimeException(ex);
+            }*/
         });
 
         String subjects = UserServices.callGetApi("https://biro3.inf.u-szeged.hu/api/v1/students/subject-instances");
-        String[] subjectInstances = subjects.split("\\},\\{");
+        //String[] subjectInstances = subjects.split("\\},\\{");
         // Get the subjects in String Array with JSON format
-        for (int i = 0; i < subjectInstances.length; i++) {
+        /*for (int i = 0; i < subjectInstances.length; i++) {
             if (subjectInstances[i].startsWith("[{")) {
                 subjectInstances[i] = subjectInstances[i].substring(1) + "}";
             } else if (subjectInstances[i].endsWith("}]")) {
@@ -49,24 +126,30 @@ public class BiroUIMainForm {
             } else {
                 subjectInstances[i] = "{" + subjectInstances[i] + "}";
             }
-        }
+        }*/
+        JsonArray subjectInstances = JsonParser.parseString(subjects).getAsJsonArray();
+
         /*subjects = subjects.replace("[{", "{");
         subjects = subjects.replace("}]", "}");
         JsonObject jsonResponse = JsonParser.parseString(subjects).getAsJsonObject();
         System.out.println("Subjects: " + jsonResponse.get("subjectName"));*/
-        System.out.println("Subjects: " + subjectInstances.length);
-        System.out.println("Subjects: " + subjectInstances[0]);
+        System.out.println("Subjects: " + subjectInstances.size());
+        System.out.println("Subjects: " + subjectInstances.get(0).toString());
 
         // TODO: do the check availability for the subjects and check their dates from-to
 
-        for (String subjectInstance : subjectInstances) {
-            JsonObject jsonResponse = JsonParser.parseString(subjectInstance).getAsJsonObject();
-            //System.out.println("Subjects: " + jsonResponse.get("subjectName"));
-            String subjectName = jsonResponse.get("subjectName").getAsString();
-            String subjectInstanceId = jsonResponse.get("subjectInstanceId").getAsString();
-            //listModel.addElement(jsonResponse.get("subjectName").getAsString());
-            subjectNamesWithIds.add(subjectName + ";" + subjectInstanceId);
-            listModel.addElement(subjectName);
+        for (JsonElement subjectInstance : subjectInstances) {
+            JsonObject jsonResponse = subjectInstance.getAsJsonObject();
+            if (jsonResponse.get("semesterName").getAsString().equals(PluginConstants.SEMESTER_NAME)) {
+                //System.out.println("Subjects: " + jsonResponse.get("subjectName"));
+                String subjectName = jsonResponse.get("subjectName").getAsString();
+                String subjectInstanceId = jsonResponse.get("subjectInstanceId").getAsString();
+                //listModel.addElement(jsonResponse.get("subjectName").getAsString());
+                subjectNamesWithIds.add(subjectName + ";" + subjectInstanceId);
+                System.out.println("Subject: " + subjectName + " - " + subjectInstanceId);
+                listModel.addElement(subjectName);
+                System.out.println("Added Subject: " + subjectName + " - " + subjectInstanceId);
+            }
         }
         list1.setModel(listModel);
 
@@ -147,14 +230,28 @@ public class BiroUIMainForm {
 
         openAssignmentButton.addActionListener(e -> {
             //System.out.println("Selected: " + list2.getSelectedValue()); // test output
-            String selectedAssignment = allAssignmentsOfSelectedSubject.stream()
-                .filter(s -> s.contains(list2.getSelectedValue().split(";")[0]))
-                .findFirst()
-                .orElse("");
-            JsonObject selectedAssignmentJSON = JsonParser.parseString(selectedAssignment).getAsJsonObject();
-            System.out.println(selectedAssignmentJSON.get("assignmentName").getAsString() + " nevű feladat kezdése...");
-            //System.out.println("Selected assignment: " + selectedAssignment); test output
-            showAssignmentView(accessToken, refreshToken, selectedAssignment);
+            if (list2.getSelectedValue() != null) {
+                String selectedAssignment = allAssignmentsOfSelectedSubject.stream()
+                        .filter(s -> s.contains(list2.getSelectedValue().split(";")[0]))
+                        .findFirst()
+                        .orElse("");
+                JsonObject selectedAssignmentJSON = JsonParser.parseString(selectedAssignment).getAsJsonObject();
+                System.out.println(selectedAssignmentJSON.get("assignmentName").getAsString() + " nevű feladat kezdése...");
+                //System.out.println("Selected assignment: " + selectedAssignment); test output
+                showAssignmentView(accessToken, refreshToken, selectedAssignment);
+            } else {
+                SwingUtilities.invokeLater(() -> {
+                    Notifications.Bus.notify(
+                            new Notification(
+                                    "Attach to Process action",
+                                    "Nincs kiválasztott feladat!",
+                                    "Kérlek válassz ki egy feladatot a listából."
+                                            + "\nHa van elérhető feladat.",
+                                    NotificationType.INFORMATION
+                            )
+                    );
+                });
+            }
         });
     }
 
