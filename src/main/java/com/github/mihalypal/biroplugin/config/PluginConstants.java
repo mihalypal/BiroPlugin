@@ -5,7 +5,7 @@ import java.util.Map;
 
 public final class PluginConstants {
     public static final String BASE_URL = "https://biro3.inf.u-szeged.hu";
-    public static final String SEMESTER_NAME = "2024/2025/2";
+    public static final String SEMESTER_NAME = "2025/2026/1";
     public static final String DISCORD_WEBHOOK_URL_TEST = ConfigLoader.getProperty("DISCORD_WEBHOOK_URL_TEST"); // not used
     public static final Map<String, String> DISCORD_WEBHOOK_URLS = Map.of(
             "Visszajelzés", ConfigLoader.getProperty("DISCORD_WEBHOOK_URLS.Visszajelzés"),
