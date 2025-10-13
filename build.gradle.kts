@@ -50,8 +50,8 @@ dependencies {
     }
 
     implementation("com.google.code.gson:gson:2.13.0")
-    implementation("org.commonmark:commonmark:0.18.2")
-    implementation("org.commonmark:commonmark-ext-gfm-tables:0.18.2")
+    implementation("org.commonmark:commonmark:0.27.0")
+    implementation("org.commonmark:commonmark-ext-gfm-tables:0.27.0")
     implementation("org.apache.xmlgraphics:batik-transcoder:1.19") {
         exclude(group = "xerces", module = "xercesImpl")
     }
